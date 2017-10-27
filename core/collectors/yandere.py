@@ -1,12 +1,15 @@
 import json
+import asyncio
 import aiohttp
+from core.mechanics.item import KyaniteItem
 
 
 class YandereCollector(object):
     def __init__(self):
         self.name = 'Yande.re Collector'
-        self.link_list = []
+        self.location = 'yre'
         self.api_base = 'https://yande.re/post.json?limit=1000&tags='
+        self.queue = asyncio.Queue()
 
     async def fill_urls(self, tags):
         print('Running Collector...')
@@ -16,22 +19,18 @@ class YandereCollector(object):
         while not empty_page:
             page_num += 1
             get_url = f'{api_url}&page={page_num}'
-            async with aiohttp.ClientSession() as session:
-                async with session.get(get_url) as data:
-                    data = await data.read()
-                    data = json.loads(data)
-                    if not data:
-                        empty_page = True
-                        print(f'Stopping at page {page_num}.')
-                    else:
-                        print(f'Found {len(data)} files on page {page_num}.')
-                        for item in data:
-                            item_data = {
-                                'id': item['md5'],
-                                'ext': item['file_ext'],
-                                'fnam': f'{item["md5"]}.{item["file_ext"]}',
-                                'cat': "_".join(sorted(tags)),
-                                'url': item['file_url']
-                            }
-                            self.link_list.append(item_data)
-        return self.link_list
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(get_url) as data:
+                        data = await data.read()
+                        data = json.loads(data)
+                        if not data:
+                            empty_page = True
+                            print(f'Stopping at page {page_num}.')
+                        else:
+                            print(f'Found {len(data)} files on page {page_num}.')
+                            for item in data:
+                                kya_item = KyaniteItem(self.location, tags, item)
+                                await self.queue.put(kya_item)
+            except Exception:
+                pass

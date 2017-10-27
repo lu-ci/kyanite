@@ -1,10 +1,6 @@
-import asyncio
-
-
-class HentaiCollector(object):
+class KyaniteCollector(object):
     def __init__(self):
         self.__version__ = 'a0.1.0'
-        self.loop = asyncio.get_event_loop()
         self.collector = None
         self.tags = []
         self.files = []
@@ -25,7 +21,7 @@ class HentaiCollector(object):
         else:
             exit('Invalid Choice.')
 
-    def run(self):
+    async def run(self):
         print('Input desired tag combination.')
         print('Leave blank if you are done.')
         ended = False
@@ -36,6 +32,7 @@ class HentaiCollector(object):
             else:
                 print('Tag choice ended.')
                 ended = True
-        self.files = self.loop.run_until_complete(self.collector.fill_urls(self.tags))
-        from .mechanics.downloader import Downloader
-        self.loop.run_until_complete(Downloader().download(self.files))
+        await self.collector.fill_urls(self.tags)
+        while not self.collector.queue.empty():
+            item = await self.collector.queue.get()
+            await item.download()
