@@ -1,4 +1,4 @@
-[![apex](https://i.imgur.com/Wc1XAL0.png)](https://lucia.moe/)
+[![apex](https://i.imgur.com/1GVFeT6.png)](https://lucia.moe/)
 
 # Kyanite Collector
 Putting the Kyaa~ in hentai storage. The expandable, modular, hentai collector.
