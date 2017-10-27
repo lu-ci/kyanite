@@ -10,6 +10,10 @@ class YandereCollector(object):
         self.location = 'yre'
         self.api_base = 'https://yande.re/post.json?limit=1000&tags='
         self.queue = asyncio.Queue()
+        self.counter = 0
+        self.done = 0
+        self.skipped = 0
+        self.failed = 0
 
     async def fill_urls(self, tags):
         print('Running Collector...')
@@ -29,8 +33,9 @@ class YandereCollector(object):
                             print(f'Stopping at page {page_num}.')
                         else:
                             print(f'Found {len(data)} files on page {page_num}.')
+                            self.counter += len(data)
                             for item in data:
-                                kya_item = KyaniteItem(self.location, tags, item)
+                                kya_item = KyaniteItem(self, tags, item)
                                 await self.queue.put(kya_item)
             except Exception:
                 pass
