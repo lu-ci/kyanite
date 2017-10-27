@@ -1,3 +1,7 @@
+from .collectors.yandere import YandereCollector
+from .collectors.konachan import KonachanCollector
+
+
 class KyaniteCollector(object):
     def __init__(self):
         self.__version__ = 'a0.1.0'
@@ -7,13 +11,13 @@ class KyaniteCollector(object):
         self.init_collector()
 
     def init_collector(self):
-        from .collectors.yandere import YandereCollector
         collectors = {
-            '0': YandereCollector()
+            '0': YandereCollector(),
+            '1': KonachanCollector()
         }
-        print('----------------------------')
+        print('----------------------------\n')
         for collector in collectors:
-            print(f'\n{collector}: {collectors[collector].name}')
+            print(f'{collector}: {collectors[collector].name}')
         print('\n----------------------------')
         choice = input('Input Option > ')
         if choice in collectors:
@@ -33,6 +37,7 @@ class KyaniteCollector(object):
                 print('Tag choice ended.')
                 ended = True
         await self.collector.fill_urls(self.tags)
+        print('Starting downloads...')
         while not self.collector.queue.empty():
             item = await self.collector.queue.get()
             await item.download()
