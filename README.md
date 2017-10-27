@@ -3,6 +3,16 @@
 # Kyanite Collector
 Putting the Kyaa~ in hentai storage. The expandable, modular, hentai collector.
 
+## What Is Kyanite
+
+[Kyanite](https://en.wikipedia.org/wiki/Kyanite) is a typically blue silicate mineral,
+commonly found in aluminium-rich metamorphic pegmatites and/or sedimentary rock.
+Kyanite in metamorphic rocks generally indicates pressures higher than four kilobars.
+Although potentially stable at lower pressure and low temperature,
+the activity of water is usually high enough under such conditions that it is
+replaced by hydrous aluminosilicates such as muscovite, pyrophyllite, or kaolinite.
+Kyanite is also known as disthene, rhaeticite and cyanite.
+
 ## Setup
 Basic instructions on how to install and run the Kyanite collector.
 
@@ -33,6 +43,11 @@ cd ~/Download/kyanite-collector-master
 ```sh
 pip install -Ur requirements.txt
 ```
+or
+```sh
+python -m pip install -Ur requirements.txt
+```
+If PIP is not in your system path.
 
 ### Running
 
@@ -45,6 +60,7 @@ python run.py
 ```
 
 A terminal window should appear. Follow the instructions and you're golden.
-The downloaded material will be stored in the `download/{tags}` folder.
+The downloaded material will be stored in the `download/{downloader}/{tags}` folder.
+For example `download/yandere/seifuku`.
 
 **Have fun!**
