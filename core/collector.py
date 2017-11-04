@@ -1,5 +1,6 @@
-from .collectors.yandere import YandereCollector
 from .collectors.konachan import KonachanCollector
+from .collectors.nhentai import NHentaiCollector
+from .collectors.yandere import YandereCollector
 
 
 class KyaniteCollector(object):
@@ -13,7 +14,8 @@ class KyaniteCollector(object):
     def init_collector(self):
         collectors = {
             '0': YandereCollector(),
-            '1': KonachanCollector()
+            '1': KonachanCollector(),
+            '2': NHentaiCollector()
         }
         print('----------------------------\n')
         for collector in collectors:
