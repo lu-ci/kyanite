@@ -1,8 +1,6 @@
-import asyncio
-from core.collector import KyaniteCollector
+from kyanite.core.kyanite import Kyanite
 
-
-if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    collector = KyaniteCollector()
-    loop.run_until_complete(collector.run())
+print('Starting Kyanite...')
+kya = Kyanite()
+kya.run()
+input('Jobs completed, press Enter to close...')

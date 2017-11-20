@@ -1,4 +1,5 @@
 import os
+
 import aiohttp
 
 
@@ -7,7 +8,7 @@ class KyaniteItem(object):
         self.downloader = downloader
         self.tags = sorted(tags) or ['everything']
         self.item_data = item_data
-        self.dl_tag = self.downloader.location
+        self.dl_tag = self.downloader.id
         self.id = self.item_data['md5']
         self.ext = self.item_data['file_ext']
         self.name = f'{self.id}.{self.ext}'
@@ -29,7 +30,6 @@ class KyaniteItem(object):
         return exists
 
     async def download(self):
-        self.downloader.done += 1
         if not self.does_exist():
             try:
                 async with aiohttp.ClientSession() as session:
@@ -37,10 +37,10 @@ class KyaniteItem(object):
                         data = await data.read()
                         with open(self.output, 'wb') as file_out:
                             file_out.write(data)
-                print(f'Complete: {self.id} | {self.downloader.done}/{self.downloader.counter}')
+                total = self.downloader.core.total_counter
+                done = self.downloader.core.complete_counter
+                print(f'Complete: {self.id} | {done}/{total}')
             except Exception:
-                self.downloader.failed += 1
-                print(f'Failure: {self.id} | No. {self.downloader.failed}')
+                print(f'Failure: {self.id}')
         else:
-            self.downloader.skipped += 1
-            print(f'Skipped: {self.id} | No. {self.downloader.skipped}')
+            print(f'Skipped: {self.id}')
