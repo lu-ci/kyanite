@@ -8,10 +8,10 @@ from kyanite.core.nodes.item import KyaniteItem
 class HModule(object):
     def __init__(self, core):
         self.core = core
-        self.id = 'gelbooru'
-        self.name = 'Gelbooru Module'
+        self.id = 'rule34'
+        self.name = 'Rule34 Module'
         self.enabled = True
-        self.api_base = 'https://gelbooru.com/index.php?page=dapi&s=post&q=index&tags='
+        self.api_base = 'https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags='
         self.collection = True
         self.tags = []
 
@@ -43,6 +43,8 @@ class HModule(object):
                             self.core.total_counter += len(data)
                             for item in data:
                                 url = item.attrib.get('file_url')
+                                if url.startswith('//'):
+                                    url = 'https:' + url
                                 if url:
                                     ext = self.get_ext(url)
                                     crypt = hashlib.new('md5')
