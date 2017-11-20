@@ -91,7 +91,8 @@ class Kyanite(object):
         loop_index = 0
         for kya_module in self.modules:
             print(f'{loop_index}: {kya_module.name}')
-        print(f'99: All Modules')
+            loop_index += 1
+        print(f'99: All Modules At Once')
         print(f'999: Exit')
         self.split()
         mode = self.selector()
@@ -101,5 +102,7 @@ class Kyanite(object):
         elif mode == 999:
             exit(0)
         else:
-            self.loop.run_until_complete(self.modules[mode].execute())
+            chosen_module = self.modules[mode]
+            print(chosen_module.name)
+            self.loop.run_until_complete(chosen_module.execute())
             self.loop.run_until_complete(self.download())
