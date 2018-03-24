@@ -32,6 +32,7 @@ class KyaniteItem(object):
     async def download(self):
         if not self.does_exist():
             try:
+                self.downloader.core.complete_counter += 1
                 async with aiohttp.ClientSession() as session:
                     async with session.get(self.url) as data:
                         data = await data.read()

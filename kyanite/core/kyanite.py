@@ -74,15 +74,9 @@ class Kyanite(object):
                 self.ongoing.remove(task)
 
     async def download(self):
-        while not self.queue.empty() or self.ongoing:
-            self.check_ongoing()
-            if len(self.ongoing) < 10:
-                self.complete_counter += 1
-                item = await self.queue.get()
-                task = self.loop.create_task(item.download())
-                self.ongoing.append(task)
-            else:
-                await asyncio.sleep(1)
+        while not self.queue.empty():
+            item = await self.queue.get()
+            await item.download()
 
     def run(self):
         self.split()
