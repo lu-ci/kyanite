@@ -27,14 +27,13 @@ class HModule(object):
         page_num = 0
         empty_page = False
         while not empty_page:
-            page_num += 1
             get_url = f'{api_url}&pid={page_num}'
+            page_num += 1
             try:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(get_url) as data:
-                        data = await data.text()
-                        data = data.encode('utf-8')
-                        data = html.etree.fromstring(data, parser=html.etree.XMLParser(encoding='utf-8'))
+                        data = await data.read()
+                        data = html.fromstring(data)
                         if len(data) == 0:
                             empty_page = True
                             print(f'Stopping at page {page_num}.')
