@@ -1,0 +1,89 @@
+image: "debian:stretch-slim"
+
+stages:
+  - prepare
+  - build
+  - publish
+
+variables:
+  RUSTUP_HOME: "$CI_PROJECT_DIR/.rustup"
+  CARGO_HOME: "$CI_PROJECT_DIR/.cargo"
+
+.write_cache:
+  cache:
+    key: "$CI_PROJECT_PATH_SLUG-rustup"
+    paths:
+      - .rustup
+      - .cargo
+
+.read_cache:
+  cache:
+    key: "$CI_PROJECT_PATH_SLUG-rustup"
+    paths:
+      - .rustup
+      - .cargo
+    policy: pull
+
+.toolchain-stable:
+  extends: .read_cache
+  before_script:
+    - apt-get update
+    - apt-get install -y --no-install-recommends ca-certificates libssl-dev libc6-dev pkg-config gcc
+    - export PATH="$CARGO_HOME/bin:$PATH"
+    - rustup default stable
+
+.toolchain-nightly:
+  extends: .read_cache
+  allow_failure: true
+  before_script:
+    - apt-get update
+    - apt-get install -y --no-install-recommends ca-certificates libssl-dev libc6-dev pkg-config gcc
+    - export PATH="$CARGO_HOME/bin:$PATH"
+    - rustup default nightly
+
+####### Jobs #######
+
+install-rust:
+  extends: .write_cache
+  stage: prepare
+  script:
+    - apt-get update
+    - apt-get install -y --no-install-recommends ca-certificates curl
+    - curl https://sh.rustup.rs > rustup.sh
+    - sh rustup.sh -y --default-host x86_64-unknown-linux-gnu
+    - export PATH="$CARGO_HOME/bin:$PATH"
+    - rustup install ${RUST_STABLE_VERSION:-stable}
+    - rustup install nightly
+  only:
+    variables:
+      - $RUSTUP_UPDATE == "true"
+
+build-stable:
+  extends: .toolchain-stable
+  stage: build
+  script:
+    - cargo build
+  only:
+    changes:
+      - Cargo.toml
+      - Cargo.lock
+      - src/**/*.rs
+
+build-nightly:
+  extends: .toolchain-nightly
+  stage: build
+  script:
+    - cargo build
+  only:
+    changes:
+      - Cargo.toml
+      - Cargo.lock
+      - src/**/*.rs
+
+deploy-crates-io:
+  extends: .toolchain-stable
+  stage: publish
+  script:
+    - cargo publish --token $CRATES_IO_API_TOKEN
+  only:
+    - tags@AXAz0r/kyanite

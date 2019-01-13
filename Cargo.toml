@@ -1,0 +1,26 @@
+[package]
+edition = "2018"
+name = "kyanite"
+version = "0.1.1"
+authors = ["AXAz0r <thealeksaradovic@gmail.com>"]
+keywords = ["image", "scrapper", "gallery"]
+license = "GPL-3.0"
+readme = "README.md"
+repository = "https://gitlab.com/lu-ci/kyanite"
+description = "A modular, expandable, gallery collector."
+
+# [patch.crates-io]
+# openssl = { git = "https://github.com/ishitatsuyuki/rust-openssl", branch = "0.9.x" }
+
+[profile.release]
+opt-level = 3
+lto = true
+
+[dependencies]
+clap = "2.32.0"
+reqwest = "0.8.7"
+serde = "1.0.80"
+serde_derive = "1.0.80"
+serde-xml-rs = "0.3.0"
+serde_json = "1.0.34"
+serde_yaml = "0.8.8"
