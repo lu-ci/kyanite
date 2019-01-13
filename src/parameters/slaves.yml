@@ -1,4 +1,8 @@
 slaves:
+  - domain: xbooru
+    api_base: https://xbooru.com/index.php?page=dapi&s=post&q=index
+    tag_arg: tags
+    page_arg: pid
   - domain: gelbooru
     api_base: https://gelbooru.com/index.php?page=dapi&s=post&q=index
     tag_arg: tags

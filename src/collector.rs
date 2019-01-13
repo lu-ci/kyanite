@@ -4,6 +4,7 @@ use super::modules::rule34::Rule34Posts;
 use super::modules::yandere::YanderePosts;
 use super::modules::konachan::KonachanPosts;
 use super::modules::gelbooru::GelbooruPosts;
+use super::modules::xbooru::XbooruPosts;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CollectorSlave {
@@ -26,7 +27,9 @@ impl CollectorSlave {
     }
     pub fn collect(&self, tags: &Vec<&str>, limit: u32) -> Result<Vec<String>, Error> {
         let mut file_urls: Vec<String> = Vec::new();
-        if self.domain == "gelbooru" {
+        if self.domain == "xbooru" {
+            file_urls = XbooruPosts::collect(&self, tags, limit)?;
+        } else if self.domain == "gelbooru" {
             file_urls = GelbooruPosts::collect(&self, tags, limit)?;
         } else if self.domain == "e621" {
             file_urls = E621Posts::collect(&self, tags, limit)?;

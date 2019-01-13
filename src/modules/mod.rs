@@ -3,3 +3,4 @@ pub mod rule34;
 pub mod yandere;
 pub mod konachan;
 pub mod gelbooru;
+pub mod xbooru;
