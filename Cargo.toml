@@ -9,8 +9,8 @@ readme = "README.md"
 repository = "https://gitlab.com/lu-ci/kyanite"
 description = "A modular, expandable, gallery collector."
 
-# [patch.crates-io]
-# openssl = { git = "https://github.com/ishitatsuyuki/rust-openssl", branch = "0.9.x" }
+[patch.crates-io]
+openssl = { git = "https://github.com/ishitatsuyuki/rust-openssl", branch = "0.9.x" }
 
 [profile.release]
 opt-level = 3
