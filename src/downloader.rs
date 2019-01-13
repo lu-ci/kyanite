@@ -58,9 +58,7 @@ impl Downloader {
     }
 
     fn download_single(&self, url: &str, path: &str) -> Result<(), Error> {
-        if !std::path::Path::new(&self.path_base).exists() {
-            std::fs::create_dir_all(&self.path_base)?;
-        }
+        std::fs::create_dir_all(&self.path_base)?;
         let file_bytes: Vec<u8> = crate::utils::get_page_bytes(&url)?;
         let mut new_file: std::fs::File = std::fs::File::create(path)?;
         new_file.write_all(&file_bytes)?;
