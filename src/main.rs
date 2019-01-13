@@ -54,9 +54,9 @@ fn main() -> Result<(), Error> {
     let limit: u32 = match ap.value_of("limit") {
         Some(limit) => match limit.parse::<u32>() {
             Ok(limit) => limit,
-            Err(_) => 0
+            Err(_) => 999999999
         },
-        None => 0
+        None => 999999999
     };
     let _verbosity: u8 = ap.occurrences_of("verbosity") as u8;
     let collector: Collector = Collector::new()?;
