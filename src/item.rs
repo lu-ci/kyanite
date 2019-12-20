@@ -1,6 +1,5 @@
 use crate::error::KyaniteError;
 use std::io::prelude::*;
-use std::io::Read;
 
 #[derive(Clone, Debug)]
 pub struct KyaniteItemMD5 {
@@ -17,13 +16,22 @@ pub struct KyaniteItem {
 }
 
 impl KyaniteItem {
-    pub fn new(url: &'static str) -> Self {
-        let pieces: Vec<&'static str> = url.split('.').collect();
-        let last_piece = pieces[pieces.len() - 1];
-        let clean_last_piece: Vec<&'static str> = last_piece.split('?').collect();
+    pub fn new(url: String) -> Self {
+        let raw_pieces = url.split('.');
+        let mut pieces = Vec::<String>::new();
+        for rp in raw_pieces {
+            pieces.push(rp.to_owned());
+        }
+        let last_piece = &pieces[pieces.len() - 1];
+        let last_piece_pieces = last_piece.split('?');
+        let mut clean_last_piece_pieces = Vec::<String>::new();
+        for lpp in last_piece_pieces {
+            clean_last_piece_pieces.push(lpp.to_owned());
+        }
+        let clean_last_piece = clean_last_piece_pieces[0].clone();
         Self {
             url: url.to_owned(),
-            ext: clean_last_piece[0].to_owned(),
+            ext: clean_last_piece,
             md5: None,
             data: None,
         }

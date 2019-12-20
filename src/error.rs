@@ -4,6 +4,8 @@ pub enum KyaniteError {
     ReqwestError(reqwest::Error),
     ReqwestUrlError(reqwest::UrlError),
     SerdeJSONError(serde_json::Error),
+    SetLoggerError(log::SetLoggerError),
+    SerdeXMLError(serde_xml_rs::Error),
 }
 
 impl From<std::io::Error> for KyaniteError {
@@ -27,5 +29,17 @@ impl From<reqwest::UrlError> for KyaniteError {
 impl From<serde_json::Error> for KyaniteError {
     fn from(err: serde_json::Error) -> Self {
         KyaniteError::SerdeJSONError(err)
+    }
+}
+
+impl From<log::SetLoggerError> for KyaniteError {
+    fn from(err: log::SetLoggerError) -> Self {
+        KyaniteError::SetLoggerError(err)
+    }
+}
+
+impl From<serde_xml_rs::Error> for KyaniteError {
+    fn from(err: serde_xml_rs::Error) -> Self {
+        KyaniteError::SerdeXMLError(err)
     }
 }

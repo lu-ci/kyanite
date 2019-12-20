@@ -51,7 +51,7 @@ impl KyaniteManifest {
             .comment(format!("Kyanite manifest for {}", &self.downloader))
             .write(std::fs::File::create(&path)?, Compression::best());
         let mut ser_bytes: Vec<u8> = serialized.into_bytes();
-        gz.write_all(ser_bytes.as_slice());
+        gz.write_all(ser_bytes.as_slice())?;
         Ok(())
     }
 }
