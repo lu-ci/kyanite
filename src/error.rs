@@ -6,6 +6,9 @@ pub enum KyaniteError {
     SerdeJSONError(serde_json::Error),
     SetLoggerError(log::SetLoggerError),
     SerdeXMLError(serde_xml_rs::Error),
+    DecompressError(flate2::DecompressError),
+    SimpleString(String),
+    FromUTF8Error(std::string::FromUtf8Error),
 }
 
 impl From<std::io::Error> for KyaniteError {
@@ -41,5 +44,23 @@ impl From<log::SetLoggerError> for KyaniteError {
 impl From<serde_xml_rs::Error> for KyaniteError {
     fn from(err: serde_xml_rs::Error) -> Self {
         KyaniteError::SerdeXMLError(err)
+    }
+}
+
+impl From<flate2::DecompressError> for KyaniteError {
+    fn from(err: flate2::DecompressError) -> Self {
+        KyaniteError::DecompressError(err)
+    }
+}
+
+impl From<String> for KyaniteError {
+    fn from(err: String) -> Self {
+        KyaniteError::SimpleString(err)
+    }
+}
+
+impl From<std::string::FromUtf8Error> for KyaniteError {
+    fn from(err: std::string::FromUtf8Error) -> Self {
+        KyaniteError::FromUTF8Error(err)
     }
 }

@@ -3,14 +3,18 @@ use crate::item::KyaniteItem;
 use serde::{Deserialize, Serialize};
 
 use crate::error::KyaniteError;
-use log::{debug, info};
+use log::{debug, error, info};
 
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct GelbooruCollector;
 
 impl GelbooruCollector {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn boxed() -> Box<dyn KyaniteCollector> {
+        Box::new(Self::new())
     }
 }
 
@@ -39,36 +43,50 @@ impl KyaniteCollector for GelbooruCollector {
         "pid"
     }
 
-    fn starting_marker(&self) -> &'static str {
-        "&"
-    }
-
     fn collect(&self, tags: Vec<String>) -> Result<Vec<KyaniteItem>, KyaniteError> {
         let mut items = Vec::new();
         let mut page = 0u64;
         let mut empty = false;
         while !empty {
-            info!("Scanning page {}...", &page);
+            info!("Scanning page {} of {}...", &page, self.name());
             debug!("Grabbing page with Reqwest GET...");
-            let mut resp = reqwest::get(&self.api_by_page(tags.clone().join("+"), page))?;
+            let joined_tags = tags.clone().join("+");
+            let mut resp = reqwest::get(&self.api_by_page(joined_tags, page.clone()))?;
             debug!("Reading the page body as text...");
             let body = resp.text()?;
             debug!("Deserializing posts...");
             let posts: GelboruPosts = match serde_xml_rs::from_str(&body) {
                 Ok(posts) => posts,
-                Err(_) => GelboruPosts { posts: Vec::new() },
+                Err(why) => {
+                    error!(
+                        "Failed getting page {} of {}, gracefully ending collection: {}",
+                        page,
+                        self.name(),
+                        why
+                    );
+                    GelboruPosts { posts: Vec::new() }
+                }
             };
-            info!("Found {} posts on page {}...", posts.posts.len(), &page);
+            info!(
+                "Found {} posts on page {} of {}...",
+                posts.posts.len(),
+                &page,
+                self.name()
+            );
             if posts.posts.len() == 0 {
                 empty = true;
+                info!("Page {} is empty, stopping collection.", &page);
             } else {
                 for post in posts.posts {
-                    items.push(KyaniteItem::new(post.file_url));
+                    items.push(KyaniteItem::new(
+                        post.file_url,
+                        tags.clone(),
+                        self.id().to_owned(),
+                    ));
                 }
                 page += 1;
             }
         }
-        dbg!(&items);
         Ok(items)
     }
 }
