@@ -83,4 +83,4 @@ deploy-crates-io:
   script:
     - cargo publish --token $CRATES_IO_API_TOKEN
   only:
-    - tags@AXAz0r/kyanite
+    - tags@lu-ci/kyanite
