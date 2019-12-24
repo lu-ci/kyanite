@@ -4,6 +4,7 @@ use crate::item::KyaniteItem;
 use crate::manifest::{KyaniteManifest, KyaniteManifestItem};
 use crate::params::KyaniteParams;
 use crate::stats::StatsContainer;
+use crate::utility::KyaniteUtility;
 use log::{debug, error, info};
 
 pub trait KyaniteCollector {
@@ -142,12 +143,14 @@ impl CollectorCore {
                 Some(manifest) => {
                     let index = item.indexed(&manifest);
                     let resp = item.save(&mut self.stats, index)?;
+                    self.stats.add_size(item.size.clone());
                     info!(
-                        "{} [{}] [{}/{}]: {}",
+                        "{} [{}] [{}] [{}/{}]: {}",
                         resp,
                         self.stats.describe(),
-                        &total,
+                        KyaniteUtility::human_size(self.stats.size.clone()),
                         self.stats.count(),
+                        &total,
                         item.describe()
                     );
                 }

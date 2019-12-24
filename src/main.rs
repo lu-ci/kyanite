@@ -13,6 +13,7 @@ mod logger;
 mod manifest;
 mod params;
 mod stats;
+mod utility;
 
 fn main() -> Result<(), KyaniteError> {
     let params = KyaniteParams::new()?;

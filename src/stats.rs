@@ -4,6 +4,7 @@ pub struct StatsContainer {
     pub failed: u64,
     pub skipped: u64,
     pub inherited: u64,
+    pub size: f64,
 }
 
 impl StatsContainer {
@@ -40,5 +41,9 @@ impl StatsContainer {
     pub fn add_inherited(&mut self) -> &'static str {
         self.inherited += 1;
         "INHERITED"
+    }
+
+    pub fn add_size(&mut self, amount: f64) {
+        self.size += amount;
     }
 }

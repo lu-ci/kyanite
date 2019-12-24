@@ -1,6 +1,7 @@
 use crate::error::KyaniteError;
 use crate::manifest::KyaniteManifest;
 use crate::stats::StatsContainer;
+use crate::utility::KyaniteUtility;
 use log::debug;
 use std::io::prelude::*;
 
@@ -59,17 +60,17 @@ impl KyaniteItem {
             url: item_url_md5,
             image: item_data_md5,
         };
-        self.size = (data.len() as f64) / 1048576f64;
+        self.size = data.len() as f64;
         self.data = Some(data);
         Ok(())
     }
 
     pub fn describe(&self) -> String {
         format!(
-            "{}.{} [{:.2} MiB]",
+            "{}.{} [{}]",
             &self.md5.clone().url,
             &self.ext,
-            &self.size
+            KyaniteUtility::human_size(self.size.clone()),
         )
     }
 
@@ -92,10 +93,6 @@ impl KyaniteItem {
             &self.md5.clone().url,
             &self.ext
         ))
-    }
-
-    pub fn exists(path: String) -> bool {
-        std::path::Path::new(&path).exists()
     }
 
     pub fn indexed(&self, manifest: &KyaniteManifest) -> Option<String> {
@@ -137,9 +134,10 @@ impl KyaniteItem {
                 }
             }
             None => {
-                if !Self::exists(path.clone()) {
+                if !std::path::Path::new(&path).exists() {
                     match &self.store(path.clone()) {
                         Ok(_) => {
+                            stats.add_size(self.size.clone());
                             response = stats.add_ok();
                         }
                         Err(_) => {
