@@ -6,9 +6,9 @@ use crate::error::KyaniteError;
 use log::{debug, info};
 
 #[derive(Clone, Debug, Default)]
-pub struct GelbooruCollector;
+pub struct Rule34Collector;
 
-impl GelbooruCollector {
+impl Rule34Collector {
     pub fn new() -> Self {
         Self::default()
     }
@@ -18,21 +18,21 @@ impl GelbooruCollector {
     }
 }
 
-impl KyaniteCollector for GelbooruCollector {
+impl KyaniteCollector for Rule34Collector {
     fn id(&self) -> &'static str {
-        "gelbooru"
+        "rule34"
     }
 
     fn name(&self) -> &'static str {
-        "Gelbooru"
+        "Rule34"
     }
 
     fn api_base(&self) -> &'static str {
-        "https://gelbooru.com/index.php?page=dapi&s=post&q=index"
+        "https://rule34.xxx/index.php?page=dapi&s=post&q=index"
     }
 
     fn site_base(&self) -> &'static str {
-        "https://gelbooru.com"
+        "https://rule34.xxx"
     }
 
     fn tags_argument(&self) -> &'static str {
@@ -55,7 +55,7 @@ impl KyaniteCollector for GelbooruCollector {
             debug!("Reading the page body as text...");
             let body = resp.text()?;
             debug!("Deserializing posts...");
-            let posts: GelbooruPosts = match serde_xml_rs::from_str(&body) {
+            let posts: Rule34Posts = match serde_xml_rs::from_str(&body) {
                 Ok(posts) => posts,
                 Err(why) => {
                     debug!(
@@ -64,7 +64,7 @@ impl KyaniteCollector for GelbooruCollector {
                         self.name(),
                         why
                     );
-                    GelbooruPosts { posts: Vec::new() }
+                    Rule34Posts { posts: Vec::new() }
                 }
             };
             info!(
@@ -97,13 +97,13 @@ impl KyaniteCollector for GelbooruCollector {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct GelbooruPosts {
+pub struct Rule34Posts {
     #[serde(rename = "post")]
-    pub posts: Vec<GelbooruPost>,
+    pub posts: Vec<Rule34Post>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct GelbooruPost {
+pub struct Rule34Post {
     pub file_url: String,
     pub tags: String,
     pub md5: String,

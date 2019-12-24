@@ -70,7 +70,7 @@ impl KyaniteItem {
             "{}.{} [{}]",
             &self.md5.clone().url,
             &self.ext,
-            KyaniteUtility::human_size(self.size.clone()),
+            KyaniteUtility::human_size(self.size.clone(), 2f64, "MiB"),
         )
     }
 
@@ -82,7 +82,7 @@ impl KyaniteItem {
         let folder = format!(
             "downloads/{}/{}",
             &self.coll,
-            slug::slugify(&self.tags.join("_"))
+            slug::slugify(&self.tags.join("-"))
         );
         if !std::path::Path::new(&folder).exists() {
             std::fs::create_dir_all(&folder)?;

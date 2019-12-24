@@ -25,22 +25,22 @@ cargo install kyanite
 
 ## Supported Services
 
-Service     | Slave       | Location        | Version
+Service     | Collector   | Location        | Type
 ------------|-------------|-----------------|--------
-e621        | e621        | e621.net        | 0.1.0
-Gelbooru    | gelbooru    | gelbooru.com    | 0.1.0
-Konachan    | konachan    | konachan.com    | 0.1.0
-Rule34      | rule34      | rule34.xxx      | 0.1.0
-Yandere     | yandere     | yande.re        | 0.1.0
-Xbooru      | xbooru      | xbooru.com      | 0.1.3
+e621        | e621        | e621.net        | Tags
+Gelbooru    | gelbooru    | gelbooru.com    | Tags
+Konachan    | konachan    | konachan.com    | Tags
+Rule34      | rule34      | rule34.xxx      | Tags
+Yandere     | yandere     | yande.re        | Tags
+Xbooru      | xbooru      | xbooru.com      | Tags
 
 ## Planned Service Support
 
-Service     | Slave       | Location        | Version
-------------|-------------|-----------------|--------
-Pixiv       | pixiv       | pixiv.net       | T.B.A
-nHentai     | nhentai     | nhentai.net     | T.B.A
-FAKKU       | fakku       | fakku.net       | T.B.A
-E-Hentai    | ehentai     | e-hentai.org    | T.B.A
-Reddit      | reddit      | reddit.com      | T.B.A
-Redditbooru | awwnime     | redditbooru.com | T.B.A
+Service     | Collector   | Location        | Type
+------------|-------------|-----------------|-----------
+Pixiv       | pixiv       | pixiv.net       | ?????
+nHentai     | nhentai     | nhentai.net     | Album
+FAKKU       | fakku       | fakku.net       | Album
+E-Hentai    | ehentai     | e-hentai.org    | Album
+Reddit      | reddit      | reddit.com      | Subreddit
+Redditbooru | awwnime     | redditbooru.com | Tags

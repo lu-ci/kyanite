@@ -1,4 +1,9 @@
+use crate::collectors::e621::E621Collector;
 use crate::collectors::gelbooru::GelbooruCollector;
+use crate::collectors::konachan::KonachanCollector;
+use crate::collectors::rule34::Rule34Collector;
+use crate::collectors::xbooru::XBooruCollector;
+use crate::collectors::yandere::YandereCollector;
 use crate::error::KyaniteError;
 use crate::item::KyaniteItem;
 use crate::manifest::{KyaniteManifest, KyaniteManifestItem};
@@ -35,7 +40,7 @@ pub trait KyaniteCollector {
         }
     }
     fn api_by_page(&self, tags: String, page: u64) -> String {
-        format!(
+        let api = format!(
             "{}{}{}={}&{}={}",
             &self.api_base(),
             &self.starting_marker(),
@@ -43,7 +48,9 @@ pub trait KyaniteCollector {
             tags,
             &self.page_argument(),
             page
-        )
+        );
+        debug!("{} API: {}", &self.name(), &api);
+        api
     }
     fn collect(&self, tags: Vec<String>) -> Result<Vec<KyaniteItem>, KyaniteError>;
 }
@@ -58,7 +65,12 @@ impl CollectorCore {
     pub fn new(params: KyaniteParams) -> Self {
         let stats = StatsContainer::new();
         let mut collectors = Vec::<Box<dyn KyaniteCollector>>::new();
+        collectors.push(E621Collector::boxed());
         collectors.push(GelbooruCollector::boxed());
+        collectors.push(KonachanCollector::boxed());
+        collectors.push(Rule34Collector::boxed());
+        collectors.push(XBooruCollector::boxed());
+        collectors.push(YandereCollector::boxed());
         Self {
             stats,
             params,
@@ -143,12 +155,11 @@ impl CollectorCore {
                 Some(manifest) => {
                     let index = item.indexed(&manifest);
                     let resp = item.save(&mut self.stats, index)?;
-                    self.stats.add_size(item.size.clone());
                     info!(
                         "{} [{}] [{}] [{}/{}]: {}",
                         resp,
                         self.stats.describe(),
-                        KyaniteUtility::human_size(self.stats.size.clone()),
+                        KyaniteUtility::human_size(self.stats.size.clone(), 3f64, "GiB"),
                         self.stats.count(),
                         &total,
                         item.describe()

@@ -32,6 +32,8 @@ fn main() -> Result<(), KyaniteError> {
         let items = collector.collect();
         if !params.debug {
             collector.download(Some(items))?;
+        } else {
+            info!("Skipped downloading phase, debugging mode is enabled.");
         }
         info!("All jobs finished, goodbye!");
     }

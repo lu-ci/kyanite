@@ -1,38 +1,36 @@
 use crate::collector::KyaniteCollector;
+use crate::error::KyaniteError;
 use crate::item::KyaniteItem;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
-use crate::error::KyaniteError;
-use log::{debug, info};
-
 #[derive(Clone, Debug, Default)]
-pub struct GelbooruCollector;
+pub struct KonachanCollector;
 
-impl GelbooruCollector {
+impl KonachanCollector {
     pub fn new() -> Self {
         Self::default()
     }
-
     pub fn boxed() -> Box<dyn KyaniteCollector> {
         Box::new(Self::new())
     }
 }
 
-impl KyaniteCollector for GelbooruCollector {
+impl KyaniteCollector for KonachanCollector {
     fn id(&self) -> &'static str {
-        "gelbooru"
+        "konachan"
     }
 
     fn name(&self) -> &'static str {
-        "Gelbooru"
+        "Konachan"
     }
 
     fn api_base(&self) -> &'static str {
-        "https://gelbooru.com/index.php?page=dapi&s=post&q=index"
+        "https://konachan.com/post.json?limit=100"
     }
 
     fn site_base(&self) -> &'static str {
-        "https://gelbooru.com"
+        "https://konachan.com"
     }
 
     fn tags_argument(&self) -> &'static str {
@@ -40,7 +38,7 @@ impl KyaniteCollector for GelbooruCollector {
     }
 
     fn page_argument(&self) -> &'static str {
-        "pid"
+        "page"
     }
 
     fn collect(&self, tags: Vec<String>) -> Result<Vec<KyaniteItem>, KyaniteError> {
@@ -55,7 +53,7 @@ impl KyaniteCollector for GelbooruCollector {
             debug!("Reading the page body as text...");
             let body = resp.text()?;
             debug!("Deserializing posts...");
-            let posts: GelbooruPosts = match serde_xml_rs::from_str(&body) {
+            let posts: Vec<KonachanPost> = match serde_json::from_str(&body) {
                 Ok(posts) => posts,
                 Err(why) => {
                     debug!(
@@ -64,25 +62,21 @@ impl KyaniteCollector for GelbooruCollector {
                         self.name(),
                         why
                     );
-                    GelbooruPosts { posts: Vec::new() }
+                    Vec::new()
                 }
             };
             info!(
                 "Found {} {} on page {} of {}...",
-                posts.posts.len(),
-                if posts.posts.len() == 1 {
-                    "post"
-                } else {
-                    "posts"
-                },
+                posts.len(),
+                if posts.len() == 1 { "post" } else { "posts" },
                 page,
                 self.name()
             );
-            if posts.posts.len() == 0 {
+            if posts.len() == 0 {
                 finished = true;
                 info!("Page {} is empty, stopping collection.", &page);
             } else {
-                for post in posts.posts {
+                for post in posts {
                     items.push(KyaniteItem::new(
                         post.file_url,
                         tags.clone(),
@@ -97,13 +91,7 @@ impl KyaniteCollector for GelbooruCollector {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct GelbooruPosts {
-    #[serde(rename = "post")]
-    pub posts: Vec<GelbooruPost>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct GelbooruPost {
+pub struct KonachanPost {
     pub file_url: String,
     pub tags: String,
     pub md5: String,
