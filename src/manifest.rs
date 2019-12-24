@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::io::prelude::*;
 
 use crate::error::KyaniteError;
-use flate2::{Compression, FlushDecompress};
+use flate2::Compression;
 
 use log::debug;
 
@@ -45,7 +45,7 @@ impl KyaniteManifest {
         Ok(format!("{}/manifest.json.gz", folder))
     }
 
-    pub fn add(&mut self, item: KyaniteManifestItem) {
+    pub fn add(&mut self, item: KyaniteManifestItem) -> Self {
         let mut exists = false;
         for file in &self.files {
             if &file.url == &item.url {
@@ -61,21 +61,17 @@ impl KyaniteManifest {
                 item.url
             );
         }
+        self.clone()
     }
 
     pub fn load(&self) -> Result<Self, KyaniteError> {
         let path = &self.get_path()?;
         let mut file = std::fs::File::open(path)?;
         let mut buffer = Vec::<u8>::new();
-        file.read(&mut buffer)?;
-        let mut output = Vec::<u8>::new();
-        flate2::Decompress::new(true).decompress_vec(
-            buffer.as_slice(),
-            &mut output,
-            FlushDecompress::Sync,
-        )?;
+        file.read_to_end(&mut buffer)?;
+        let mut contents = String::new();
+        flate2::read::GzDecoder::new(buffer.as_slice()).read_to_string(&mut contents)?;
         let manifest: Self;
-        let contents = String::from_utf8(output.clone())?;
         if &contents != "" {
             manifest = serde_json::from_str(&contents)?;
         } else {
@@ -93,11 +89,12 @@ impl KyaniteManifest {
         let path = &self.get_path()?;
         let serialized = serde_json::ser::to_string(self)?;
         let mut gz = flate2::GzBuilder::new()
-            .filename(format!("Kyanite Manifest: {}", &self.downloader))
+            .filename(format!("{}_manifest.json", &self.downloader))
             .comment(format!("Kyanite manifest for {}", &self.downloader))
             .write(std::fs::File::create(&path)?, Compression::best());
         let ser_bytes: Vec<u8> = serialized.into_bytes();
         gz.write_all(ser_bytes.as_slice())?;
+        gz.finish()?;
         debug!(
             "Manifest for {} saved with {} items.",
             &self.downloader,

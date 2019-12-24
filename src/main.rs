@@ -31,7 +31,6 @@ fn main() -> Result<(), KyaniteError> {
         let items = collector.collect();
         if !params.debug {
             collector.download(Some(items))?;
-            collector.save_manifests()?;
         }
         info!("All jobs finished, goodbye!");
     }

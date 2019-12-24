@@ -14,9 +14,9 @@ pub struct KyaniteItemMD5 {
 pub struct KyaniteItem {
     pub url: String,
     pub ext: String,
-    pub md5: Option<KyaniteItemMD5>,
+    pub md5: KyaniteItemMD5,
     pub data: Option<Vec<u8>>,
-    pub size: u64,
+    pub size: f64,
     pub tags: Vec<String>,
     pub coll: String,
 }
@@ -38,9 +38,12 @@ impl KyaniteItem {
         Self {
             url: url.to_owned(),
             ext: clean_last_piece,
-            md5: None,
+            md5: KyaniteItemMD5 {
+                url: format!("{:x}", md5::compute(&url)),
+                image: "".to_owned(),
+            },
             data: None,
-            size: 0,
+            size: 0.0,
             tags,
             coll,
         }
@@ -52,22 +55,21 @@ impl KyaniteItem {
         resp.copy_to(&mut data)?;
         let item_url_md5 = format!("{:x}", md5::compute(&self.url));
         let item_data_md5 = format!("{:x}", md5::compute(&data));
-        self.md5 = Some(KyaniteItemMD5 {
+        self.md5 = KyaniteItemMD5 {
             url: item_url_md5,
             image: item_data_md5,
-        });
-        self.size = data.len() as u64;
+        };
+        self.size = (data.len() as f64) / 1048576f64;
         self.data = Some(data);
         Ok(())
     }
 
     pub fn describe(&self) -> String {
-        let size = self.size / 1048576;
         format!(
-            "{}.{} [{} MiB]",
-            &self.md5.clone().unwrap().image,
+            "{}.{} [{:.2} MiB]",
+            &self.md5.clone().url,
             &self.ext,
-            size
+            &self.size
         )
     }
 
@@ -76,14 +78,18 @@ impl KyaniteItem {
     }
 
     pub fn path(&self) -> Result<String, KyaniteError> {
-        let folder = format!("downloads/{}/{}", &self.coll, &self.tags.join("_"));
+        let folder = format!(
+            "downloads/{}/{}",
+            &self.coll,
+            slug::slugify(&self.tags.join("_"))
+        );
         if !std::path::Path::new(&folder).exists() {
             std::fs::create_dir_all(&folder)?;
         }
         Ok(format!(
             "{}/{}.{}",
             folder,
-            &self.md5.clone().unwrap().image,
+            &self.md5.clone().url,
             &self.ext
         ))
     }
@@ -96,7 +102,9 @@ impl KyaniteItem {
         let mut location = None;
         for file in &manifest.files {
             if &file.url == &self.url {
-                location = Some(file.file.to_owned());
+                if std::path::Path::new(&file.file).exists() {
+                    location = Some(file.file.to_owned());
+                }
             }
         }
         location
@@ -121,8 +129,12 @@ impl KyaniteItem {
             Some(idx) => {
                 let source = std::path::Path::new(&idx);
                 let destination = std::path::Path::new(&path);
-                std::fs::copy(source, destination)?;
-                response = stats.add_inherited();
+                if source.exists() && !destination.exists() {
+                    std::fs::copy(source, destination)?;
+                    response = stats.add_inherited();
+                } else {
+                    response = stats.add_skipped();
+                }
             }
             None => {
                 if !Self::exists(path.clone()) {

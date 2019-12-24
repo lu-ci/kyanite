@@ -5,7 +5,6 @@ use crate::manifest::{KyaniteManifest, KyaniteManifestItem};
 use crate::params::KyaniteParams;
 use crate::stats::StatsContainer;
 use log::{debug, error, info};
-use std::collections::HashMap;
 
 pub trait KyaniteCollector {
     fn id(&self) -> &'static str;
@@ -87,15 +86,16 @@ impl CollectorCore {
                             Vec::new()
                         }
                     };
+                    let mut manifest = collector.manifest();
                     for item in collected {
                         match item.path() {
                             Ok(path) => {
                                 let manifest_item = KyaniteManifestItem::new(
                                     item.url.clone(),
                                     path,
-                                    self.params.clone().tags,
+                                    item.tags.clone(),
                                 );
-                                collector.manifest().add(manifest_item);
+                                manifest.add(manifest_item);
                             }
                             Err(why) => {
                                 error!(
@@ -107,41 +107,41 @@ impl CollectorCore {
                         }
                         items.push(item);
                     }
+                    match manifest.save() {
+                        Ok(_) => {}
+                        Err(why) => {
+                            error!("Failed saving the {} manifest: {:#?}", collector.id(), why);
+                        }
+                    }
                 }
             }
         }
         KyaniteItem::trim(items)
     }
 
-    pub fn get_manifests(&self) -> Result<HashMap<String, KyaniteManifest>, KyaniteError> {
-        let mut manifests = HashMap::new();
+    pub fn get_manifest(&self, name: String) -> Option<KyaniteManifest> {
+        let mut manifest = None;
         for collector in &self.collectors {
-            manifests.insert(collector.id().to_owned(), collector.manifest());
+            if collector.id() == &name {
+                manifest = Some(collector.manifest());
+                break;
+            }
         }
-        Ok(manifests)
-    }
-
-    pub fn save_manifests(&self) -> Result<(), KyaniteError> {
-        for collector in &self.collectors {
-            collector.manifest().save()?;
-        }
-        Ok(())
+        manifest
     }
 
     pub fn download(&mut self, items: Option<Vec<KyaniteItem>>) -> Result<(), KyaniteError> {
-        let manifests = &self.get_manifests()?;
         let items = match items {
             Some(items) => items,
             None => self.collect(),
         };
         let total = items.len();
         let mut result = Ok(());
-        for item in items {
-            match manifests.get(&item.coll) {
+        for mut item in items {
+            match self.get_manifest(item.coll.clone()) {
                 Some(manifest) => {
-                    let index = item.indexed(manifest);
-                    let mut copy = item.clone();
-                    let resp = copy.save(&mut self.stats, index)?;
+                    let index = item.indexed(&manifest);
+                    let resp = item.save(&mut self.stats, index)?;
                     info!(
                         "{} [{}] [{}/{}]: {}",
                         resp,
