@@ -95,13 +95,12 @@ impl KyaniteItem {
         ))
     }
 
-    pub fn indexed(&self, manifest: &KyaniteManifest) -> Option<String> {
+    pub fn indexed(&self, _manifest: &KyaniteManifest) -> Option<String> {
         let mut location = None;
-        for file in &manifest.files {
-            if &file.url == &self.url {
-                if std::path::Path::new(&file.file).exists() {
-                    location = Some(file.file.to_owned());
-                }
+        let path = self.path().unwrap_or_else(|_| "".to_owned());
+        if !path.is_empty() {
+            if std::path::Path::new(&path).exists() {
+                location = Some(path);
             }
         }
         location
