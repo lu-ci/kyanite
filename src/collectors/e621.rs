@@ -26,7 +26,7 @@ impl KyaniteCollector for E621Collector {
     }
 
     fn api_base(&self) -> &'static str {
-        "https://e621.net/post/index.json?limit=100"
+        "https://e621.net/posts.json"
     }
 
     fn site_base(&self) -> &'static str {
@@ -53,8 +53,8 @@ impl KyaniteCollector for E621Collector {
             debug!("Reading the page body as text...");
             let body = resp.text()?;
             debug!("Deserializing posts...");
-            let posts: Vec<E621Post> = match serde_json::from_str(&body) {
-                Ok(posts) => posts,
+            let posts: Vec<E621Post> = match serde_json::from_str::<E621Response>(&body) {
+                Ok(resp) => resp.posts,
                 Err(why) => {
                     debug!(
                         "Failed getting page {} of {}, gracefully ending collection: {}",
@@ -77,11 +77,10 @@ impl KyaniteCollector for E621Collector {
                 info!("Page {} is empty, stopping collection.", &page);
             } else {
                 for post in posts {
-                    items.push(KyaniteItem::new(
-                        post.file_url,
-                        tags.clone(),
-                        self.id().to_owned(),
-                    ));
+                    let url = post.file.url.unwrap_or_else(|| "".to_owned());
+                    if !url.is_empty() {
+                        items.push(KyaniteItem::new(url, tags.clone(), self.id().to_owned()));
+                    }
                 }
                 page += 1;
             }
@@ -91,8 +90,17 @@ impl KyaniteCollector for E621Collector {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct E621Response {
+    pub posts: Vec<E621Post>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct E621Post {
-    pub file_url: String,
-    pub tags: String,
+    pub file: E621PostFile,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct E621PostFile {
     pub md5: String,
+    pub url: Option<String>,
 }
