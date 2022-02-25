@@ -63,9 +63,8 @@ install-rust:
 build-stable:
   extends: .toolchain-stable
   stage: build
-  before_script:
-    - echo BUILD_JOB_ID=$CI_JOB_ID >> builder.env
   script:
+    - echo BUILD_JOB_ID=$CI_JOB_ID >> builder.env
     - cargo build
   artifacts:
     paths:
@@ -77,6 +76,7 @@ build-stable:
       - Cargo.toml
       - Cargo.lock
       - src/**/*.rs
+      - .gitlab-ci.yml
 
 build-nightly:
   extends: .toolchain-nightly
@@ -98,7 +98,7 @@ deploy-crates-io:
     - tags@lu-ci/kyanite
 
 deploy-gitlab:
-  extends: build-stable
+  extends: .toolchain-stable
   stage: publish
   needs:
     - job: build-stable
