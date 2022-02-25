@@ -54,6 +54,11 @@ install-rust:
     - export PATH="$CARGO_HOME/bin:$PATH"
     - rustup install ${RUST_STABLE_VERSION:-stable}
     - rustup install nightly
+  only:
+    changes:
+      - Cargo.toml
+      - Cargo.lock
+      - src/**/*.rs
 
 build-stable:
   extends: .toolchain-stable
