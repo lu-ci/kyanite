@@ -64,7 +64,7 @@ build-stable:
   extends: .toolchain-stable
   stage: build
   before_script:
-    - echo GE_JOB_ID=$CI_JOB_ID >> builder.env
+    - echo BUILD_JOB_ID=$CI_JOB_ID >> builder.env
   script:
     - cargo build
   artifacts:
