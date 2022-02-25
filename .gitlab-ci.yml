@@ -98,7 +98,7 @@ deploy-crates-io:
     - tags@lu-ci/kyanite
 
 deploy-gitlab:
-  extends: .toolchain-stable
+  extends: build-stable
   stage: publish
   needs:
     - job: build-stable
