@@ -107,7 +107,7 @@ impl KyaniteItem {
     }
 
     pub fn store(&mut self, path: String) -> Result<(), KyaniteError> {
-        &self.download()?;
+        self.download()?;
         let mut file = std::fs::File::create(&path)?;
         file.write_all(&self.data.clone().unwrap())?;
         file.sync_all()?;
@@ -143,7 +143,7 @@ impl KyaniteItem {
                             response = stats.add_failed();
                         }
                     }
-                    &self.expunge();
+                    self.expunge();
                 } else {
                     response = stats.add_skipped();
                 }
