@@ -7,14 +7,15 @@ stages:
 
 # Prepare
 .prepare_stable:
-  #  stage: "prepare"
   script:
     - echo 'Running stable preparation...'
     - rustup update
+    - rustup default > .toolchain
   cache:
     - key:
         files:
           - "Cargo.lock"
+          - ".toolchain"
       paths:
         - target
 
@@ -24,10 +25,12 @@ stages:
     - echo 'Running nightly preparation...'
     - rustup install nightly
     - rustup default nightly
+    - rustup default > .toolchain
   cache:
     - key:
         files:
           - "Cargo.lock"
+          - ".toolchain"
       paths:
         - target
 
@@ -100,6 +103,7 @@ build_stable:
     - echo 'Building stable release...'
     - cargo build --release
   artifacts:
+    name: "kyanite"
     paths:
       - "target/release/kyanite"
 
