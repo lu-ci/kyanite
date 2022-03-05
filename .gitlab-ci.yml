@@ -1,117 +1,138 @@
-image: "debian:stretch-slim"
+image: "rust:latest"
 
 stages:
-  - prepare
-  - build
-  - publish
+  - "base"
+  - "prepare"
+  - "test"
+  - "build"
+  - "publish"
 
-variables:
-  RUSTUP_HOME: "$CI_PROJECT_DIR/.rustup"
-  CARGO_HOME: "$CI_PROJECT_DIR/.cargo"
-
-.write_cache:
-  cache:
-    key: "$CI_COMMIT_REF_SLUG-rustup"
-    paths:
-      - .rustup
-      - .cargo
-
-.read_cache:
-  cache:
-    key: "$CI_COMMIT_REF_SLUG-rustup"
-    paths:
-      - .rustup
-      - .cargo
-    policy: pull
-
-.toolchain-stable:
-  extends: .read_cache
-  before_script:
-    - apt-get update
-    - apt-get install -y --no-install-recommends ca-certificates libssl-dev libc6-dev pkg-config gcc
-    - export PATH="$CARGO_HOME/bin:$PATH"
-    - rustup default stable
-
-.toolchain-nightly:
-  extends: .read_cache
-  allow_failure: true
-  before_script:
-    - apt-get update
-    - apt-get install -y --no-install-recommends ca-certificates libssl-dev libc6-dev pkg-config gcc
-    - export PATH="$CARGO_HOME/bin:$PATH"
-    - rustup default nightly
-
-####### Jobs #######
-
-install-rust:
-  extends: .write_cache
-  stage: prepare
+# Prepare
+base:
+  stage: "base"
   script:
-    - apt-get update
-    - apt-get install -y --no-install-recommends ca-certificates curl
     - curl --location --output /usr/local/bin/release-cli "https://gitlab.com/api/v4/projects/gitlab-org%2Frelease-cli/packages/generic/release-cli/latest/release-cli-darwin-amd64"
     - chmod +x /usr/local/bin/release-cli
-    - curl https://sh.rustup.rs > rustup.sh
-    - sh rustup.sh -y --default-host x86_64-unknown-linux-gnu
-    - export PATH="$CARGO_HOME/bin:$PATH"
-    - rustup install ${RUST_STABLE_VERSION:-stable}
-    - rustup install nightly
-  only:
-    changes:
-      - Cargo.toml
-      - Cargo.lock
-      - src/**/*.rs
 
-build-stable:
-  extends: .toolchain-stable
-  stage: build
+prepare_stable:
+  stage: "prepare"
+  needs:
+    - "base"
   script:
-    - echo BUILD_JOB_ID=$CI_JOB_ID >> builder.env
-    - cargo build
+    - echo 'Running stable preparation stage...'
+    - rustup update
+    - rustup default
+    - rustup component add clippy-preview
+
+prepare_nightly:
+  stage: "prepare"
+  needs:
+    - "base"
+  script:
+    - echo 'Running nightly preparation stage...'
+    - rustup install nightly
+    - rustup default nightly
+    - rustup default
+    - rustup component add clippy-preview
+
+# Test
+
+## Check
+check_stable:
+  stage: "test"
+  needs:
+    - "prepare_stable"
+  script:
+    - echo 'Running stable checks...'
+    - cargo check
+
+check_nightly:
+  stage: "test"
+  needs:
+    - "prepare_nightly"
+  script:
+    - echo 'Running nightly checks...'
+    - cargo check
+
+## Test
+test_stable:
+  stage: "test"
+  needs:
+    - "check_stable"
+  script:
+    - echo 'Running stable tests...'
+    - cargo test
+
+test_nightly:
+  stage: "test"
+  needs:
+    - "check_nightly"
+  script:
+    - echo 'Running nightly tests...'
+    - cargo test
+
+## Clippy
+clippy_stable:
+  stage: "test"
+  needs:
+    - "test_stable"
+  script:
+    - echo 'Running stable clippy...'
+    - cargo clippy
+  allow_failure: true
+
+clippy_nightly:
+  stage: "test"
+  needs:
+    - "test_nightly"
+  script:
+    - echo 'Running nightly clippy...'
+    - cargo clippy
+  allow_failure: true
+
+# Build
+build_stable:
+  stage: "build"
+  needs:
+    - "test_stable"
+  script:
+    - echo 'Building stable release...'
+    - cargo build --release
   artifacts:
     paths:
-      - target/release/kyanite
-    reports:
-      dotenv: builder.env
-  only:
-    changes:
-      - Cargo.toml
-      - Cargo.lock
-      - src/**/*.rs
-      - .gitlab-ci.yml
+      - "target/release/kyanite"
 
-build-nightly:
-  extends: .toolchain-nightly
-  stage: build
+build_nightly:
+  stage: "build"
+  needs:
+    - "test_nightly"
   script:
-    - cargo build
-  only:
-    changes:
-      - Cargo.toml
-      - Cargo.lock
-      - src/**/*.rs
+    - echo 'Building nightly release...'
+    - cargo build --release
 
-deploy-crates-io:
-  extends: .toolchain-stable
-  stage: publish
+# Publish
+crates_io:
+  stage: "publish"
+  needs:
+    - "build_stable"
   script:
+    - echo 'Publishing to crates.io...'
     - cargo publish --token "$CRATES_IO_API_TOKEN"
   only:
     - tags@lu-ci/kyanite
 
-#deploy-gitlab:
-#  extends: build-stable
-#  stage: publish
-#  needs:
-#    - job: build-stable
-#      artifacts: true
-#  release:
-#    name: "Release Executable $CI_COMMIT_SHORT_SHA"
-#    description: "Automated LINUX executable release for Kyanite."
-#    tag_name: "$CI_COMMIT_SHORT_SHA"
-#    assets:
-#      links:
-#        - name: 'Linux Executable'
-#          url: '${CI_PROJECT_URL}/-/jobs/${BUILD_JOB_ID}/artifacts/file/dist/cloudwatch-linux'
-#  only:
-#    - tags@lu-ci/kyanite
+gitlab:
+  stage: "publish"
+  needs:
+    - job: "build_stable"
+      artifacts: true
+  script:
+    - echo 'Publishing to GitLab...'
+  release:
+    name: "Kyanite $CI_COMMIT_SHORT_SHA"
+    description: "Automated LINUX executable release for Kyanite."
+    tag_name: "$CI_COMMIT_SHORT_SHA"
+    assets:
+      links:
+        - name: 'Linux Executable'
+          url: '${CI_PROJECT_URL}/-/jobs/${BUILD_JOB_ID}/artifacts/file/dist/kyanite'
