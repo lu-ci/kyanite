@@ -1,9 +1,11 @@
+use std::io::prelude::*;
+
+use log::debug;
+
 use crate::error::KyaniteError;
 use crate::manifest::KyaniteManifest;
 use crate::stats::StatsContainer;
 use crate::utility::KyaniteUtility;
-use log::debug;
-use std::io::prelude::*;
 
 #[derive(Clone, Debug)]
 pub struct KyaniteItemMD5 {
@@ -70,7 +72,7 @@ impl KyaniteItem {
             "{}.{} [{}]",
             &self.md5.clone().url,
             &self.ext,
-            KyaniteUtility::human_size(self.size.clone(), 2f64, "MiB"),
+            KyaniteUtility::human_size(self.size, 2f64, "MiB"),
         )
     }
 
@@ -98,10 +100,8 @@ impl KyaniteItem {
     pub fn indexed(&self, _manifest: &KyaniteManifest) -> Option<String> {
         let mut location = None;
         let path = self.path().unwrap_or_else(|_| "".to_owned());
-        if !path.is_empty() {
-            if std::path::Path::new(&path).exists() {
-                location = Some(path);
-            }
+        if !path.is_empty() && std::path::Path::new(&path).exists() {
+            location = Some(path);
         }
         location
     }
@@ -134,9 +134,9 @@ impl KyaniteItem {
             }
             None => {
                 if !std::path::Path::new(&path).exists() {
-                    match &self.store(path.clone()) {
+                    match &self.store(path) {
                         Ok(_) => {
-                            stats.add_size(self.size.clone());
+                            stats.add_size(self.size);
                             response = stats.add_ok();
                         }
                         Err(_) => {

@@ -52,7 +52,7 @@ impl KyaniteParams {
         let sources = match matches.value_of("sources") {
             Some(srcs) => {
                 let mut clean = Vec::<String>::new();
-                let pieces = srcs.split(",");
+                let pieces = srcs.split(',');
                 for piece in pieces {
                     clean.push(piece.trim().to_owned())
                 }
@@ -63,7 +63,7 @@ impl KyaniteParams {
         let tags = match matches.value_of("tags") {
             Some(tags) => {
                 let mut clean = Vec::<String>::new();
-                let pieces = tags.split(",");
+                let pieces = tags.split(',');
                 for piece in pieces {
                     clean.push(piece.trim().to_owned())
                 }

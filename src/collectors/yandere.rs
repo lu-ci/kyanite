@@ -49,7 +49,7 @@ impl KyaniteCollector for YandereCollector {
         while !finished {
             debug!("Grabbing page with Reqwest GET...");
             let joined_tags = tags.clone().join("+");
-            let mut resp = reqwest::get(&self.api_by_page(joined_tags, page.clone()))?;
+            let mut resp = reqwest::get(&self.api_by_page(joined_tags, page))?;
             debug!("Reading the page body as text...");
             let body = resp.text()?;
             debug!("Deserializing posts...");
@@ -72,7 +72,7 @@ impl KyaniteCollector for YandereCollector {
                 page,
                 self.name()
             );
-            if posts.len() == 0 {
+            if posts.is_empty() {
                 finished = true;
                 info!("Page {} is empty, stopping collection.", &page);
             } else {

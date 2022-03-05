@@ -1,3 +1,5 @@
+use log::{debug, error, info};
+
 use crate::collectors::e621::E621Collector;
 use crate::collectors::gelbooru::GelbooruCollector;
 use crate::collectors::konachan::KonachanCollector;
@@ -10,7 +12,6 @@ use crate::manifest::{KyaniteManifest, KyaniteManifestItem};
 use crate::params::KyaniteParams;
 use crate::stats::StatsContainer;
 use crate::utility::KyaniteUtility;
-use log::{debug, error, info};
 
 pub trait KyaniteCollector {
     fn id(&self) -> &'static str;
@@ -64,13 +65,14 @@ pub struct CollectorCore {
 impl CollectorCore {
     pub fn new(params: KyaniteParams) -> Self {
         let stats = StatsContainer::new();
-        let mut collectors = Vec::<Box<dyn KyaniteCollector>>::new();
-        collectors.push(E621Collector::boxed());
-        collectors.push(GelbooruCollector::boxed());
-        collectors.push(KonachanCollector::boxed());
-        collectors.push(Rule34Collector::boxed());
-        collectors.push(XBooruCollector::boxed());
-        collectors.push(YandereCollector::boxed());
+        let collectors = vec![
+            E621Collector::boxed(),
+            GelbooruCollector::boxed(),
+            KonachanCollector::boxed(),
+            Rule34Collector::boxed(),
+            XBooruCollector::boxed(),
+            YandereCollector::boxed(),
+        ];
         Self {
             stats,
             params,
@@ -135,7 +137,7 @@ impl CollectorCore {
     pub fn get_manifest(&self, name: String) -> Option<KyaniteManifest> {
         let mut manifest = None;
         for collector in &self.collectors {
-            if collector.id() == &name {
+            if collector.id() == name {
                 manifest = Some(collector.manifest());
                 break;
             }
@@ -159,7 +161,7 @@ impl CollectorCore {
                         "{} [{}] [{}] [{}/{}]: {}",
                         resp,
                         self.stats.describe(),
-                        KyaniteUtility::human_size(self.stats.size.clone(), 3f64, "GiB"),
+                        KyaniteUtility::human_size(self.stats.size, 3f64, "GiB"),
                         self.stats.count(),
                         &total,
                         item.describe()
