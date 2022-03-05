@@ -99,19 +99,19 @@ deploy-crates-io:
   only:
     - tags@lu-ci/kyanite
 
-deploy-gitlab:
-  extends: build-stable
-  stage: publish
-  needs:
-    - job: build-stable
-      artifacts: true
-  release:
-    name: "Release Executable $CI_COMMIT_SHORT_SHA"
-    description: "Automated LINUX executable release for Kyanite."
-    tag_name: "$CI_COMMIT_SHORT_SHA"
-    assets:
-      links:
-        - name: 'Linux Executable'
-          url: '${CI_PROJECT_URL}/-/jobs/${BUILD_JOB_ID}/artifacts/file/dist/cloudwatch-linux'
-  only:
-    - tags@lu-ci/kyanite
+#deploy-gitlab:
+#  extends: build-stable
+#  stage: publish
+#  needs:
+#    - job: build-stable
+#      artifacts: true
+#  release:
+#    name: "Release Executable $CI_COMMIT_SHORT_SHA"
+#    description: "Automated LINUX executable release for Kyanite."
+#    tag_name: "$CI_COMMIT_SHORT_SHA"
+#    assets:
+#      links:
+#        - name: 'Linux Executable'
+#          url: '${CI_PROJECT_URL}/-/jobs/${BUILD_JOB_ID}/artifacts/file/dist/cloudwatch-linux'
+#  only:
+#    - tags@lu-ci/kyanite
