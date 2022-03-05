@@ -15,12 +15,10 @@ stages:
     - key:
         files:
           - "Cargo.lock"
-          - ".toolchain"
       paths:
         - target
 
 .prepare_nightly:
-  #  stage: "prepare"
   script:
     - echo 'Running nightly preparation...'
     - rustup install nightly
@@ -30,68 +28,33 @@ stages:
     - key:
         files:
           - "Cargo.lock"
-          - ".toolchain"
       paths:
         - target
 
 # Test
-
-## Check
-check_stable:
-  stage: "test"
-  extends: .prepare_stable
-  script:
-    - echo 'Running stable checks...'
-    - cargo check
-
-check_nightly:
-  stage: "test"
-  extends: .prepare_nightly
-  script:
-    - echo 'Running nightly checks...'
-    - cargo check
-
-## Test
 test_stable:
   stage: "test"
   extends: ".prepare_stable"
-  needs:
-    - "check_stable"
   script:
+    - echo 'Running stable checks...'
+    - cargo check
     - echo 'Running stable tests...'
     - cargo test
+    - echo 'Running stable clippy...'
+    - rustup component add clippy-preview
+    - cargo clippy
 
 test_nightly:
   stage: "test"
   extends: ".prepare_nightly"
-  needs:
-    - "check_nightly"
   script:
+    - echo 'Running nightly checks...'
+    - cargo check
     - echo 'Running nightly tests...'
     - cargo test
-
-## Clippy
-clippy_stable:
-  stage: "test"
-  extends: ".prepare_stable"
-  needs:
-    - "test_stable"
-  script:
-    - echo 'Running stable clippy...'
-    - rustup component add clippy-preview
-    - cargo clippy
-  allow_failure: true
-
-clippy_nightly:
-  stage: "test"
-  extends: ".prepare_nightly"
-  needs:
-    - "test_nightly"
-  script:
     - echo 'Running nightly clippy...'
     - rustup component add clippy-preview
     - cargo clippy
-  allow_failure: true
 
 # Build
 build_stable:
