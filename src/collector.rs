@@ -154,8 +154,8 @@ impl CollectorCore {
         let mut result = Ok(());
         for mut item in items {
             match self.get_manifest(item.coll.clone()) {
-                Some(manifest) => {
-                    let index = item.indexed(&manifest);
+                Some(_manifest) => {
+                    let index = item.exists().unwrap_or(None);
                     let resp = item.save(&mut self.stats, index)?;
                     info!(
                         "{} [{}] [{}] [{}/{}]: {}",

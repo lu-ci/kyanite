@@ -52,6 +52,10 @@ impl KyaniteItem {
         }
     }
 
+    pub fn name(&self) -> String {
+        format!("{}.{}", &self.md5.clone().url, &self.ext)
+    }
+
     pub fn download(&mut self) -> Result<(), KyaniteError> {
         let mut data: Vec<u8> = Vec::new();
         let mut resp = reqwest::get(&self.url)?;
@@ -97,13 +101,37 @@ impl KyaniteItem {
         ))
     }
 
-    pub fn indexed(&self, _manifest: &KyaniteManifest) -> Option<String> {
+    pub fn _indexed(&self, _manifest: &KyaniteManifest) -> Option<String> {
         let mut location = None;
         let path = self.path().unwrap_or_else(|_| "".to_owned());
         if !path.is_empty() && std::path::Path::new(&path).exists() {
             location = Some(path);
         }
         location
+    }
+
+    pub fn exists(&self) -> anyhow::Result<Option<String>> {
+        let name = self.name();
+        let mut location = None;
+        let service_folders = std::fs::read_dir("downloads/")?;
+        'sfl: for service_folder in service_folders {
+            let sf = service_folder?;
+            let tag_folders = std::fs::read_dir(sf.path())?;
+            for tag_folder in tag_folders {
+                let tf = tag_folder?;
+                let files = std::fs::read_dir(tf.path())?;
+                for file in files {
+                    let ff = file?;
+                    let fname = ff.file_name();
+                    let file_name = fname.to_str().unwrap_or("");
+                    if file_name == &name {
+                        location = Some(ff.path().to_str().unwrap_or("").to_string());
+                        break 'sfl;
+                    }
+                }
+            }
+        }
+        Ok(location)
     }
 
     pub fn store(&mut self, path: String) -> Result<(), KyaniteError> {
