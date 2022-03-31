@@ -124,7 +124,7 @@ impl KyaniteItem {
                     let ff = file?;
                     let fname = ff.file_name();
                     let file_name = fname.to_str().unwrap_or("");
-                    if file_name == &name {
+                    if file_name == name {
                         location = Some(ff.path().to_str().unwrap_or("").to_string());
                         break 'sfl;
                     }
