@@ -185,15 +185,13 @@ impl KyaniteItem {
         let mut new = Vec::<Self>::new();
         let mut stats = StatsContainer::new();
         for item in &items {
-            if !std::path::Path::new(&item.path()?).exists() {
+            if std::path::Path::new(&item.path()?).exists() {
                 let _ = stats.add_skipped();
             } else {
                 new.push(item.clone());
             }
         }
-        if stats.skipped > 0 {
-            info!("Pre-Skipped: {} items.", stats.skipped);
-        }
+        info!("Pre-Skipped: {}/{} items.", stats.skipped, items.len());
         Ok(new)
     }
 

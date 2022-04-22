@@ -96,9 +96,10 @@ impl CollectorCore {
                 }
             }
         }
-        Ok(KyaniteItem::sort(KyaniteItem::skip(KyaniteItem::trim(
-            items,
-        ))?))
+        let trimmed = KyaniteItem::trim(items);
+        let skipped = KyaniteItem::skip(trimmed)?;
+        let sorted = KyaniteItem::sort(skipped);
+        Ok(sorted)
     }
 
     pub fn download(&mut self, items: Option<Vec<KyaniteItem>>) -> anyhow::Result<()> {
