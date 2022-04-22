@@ -1,10 +1,9 @@
-use crate::error::KyaniteError;
 use log::{debug, info};
 
 pub struct KyaniteLogger;
 
 impl KyaniteLogger {
-    pub fn init(verbose: bool) -> Result<(), KyaniteError> {
+    pub fn init(verbose: bool) -> anyhow::Result<()> {
         let log_level = if verbose {
             log::LevelFilter::Debug
         } else {

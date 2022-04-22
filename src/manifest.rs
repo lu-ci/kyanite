@@ -1,57 +1,55 @@
 use serde::{Deserialize, Serialize};
 
-use crate::error::KyaniteError;
-
-use log::debug;
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct KyaniteManifestItem {
-    pub url: String,
+    pub name: String,
     pub file: String,
     pub tags: Vec<String>,
 }
 
 impl KyaniteManifestItem {
-    pub fn new(url: String, file: String, tags: Vec<String>) -> Self {
-        Self { url, file, tags }
+    pub fn new(name: String, file: String, tags: Vec<String>) -> Self {
+        Self { name, file, tags }
     }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct KyaniteManifest {
     pub files: Vec<KyaniteManifestItem>,
-    pub downloader: String,
 }
 
 impl KyaniteManifest {
-    pub fn new(downloader: String) -> Self {
-        Self {
-            files: Vec::new(),
-            downloader,
+    pub fn new() -> anyhow::Result<Self> {
+        let mut man = Self { files: Vec::new() };
+        man.load()?;
+        Ok(man)
+    }
+
+    pub fn add(&mut self, item: KyaniteManifestItem) {
+        self.files.push(item);
+    }
+
+    fn load(&mut self) -> anyhow::Result<()> {
+        if std::path::Path::new("downloads/").exists() {
+            let service_folders = std::fs::read_dir("downloads/")?;
+            for service_folder in service_folders {
+                let sf = service_folder?;
+                let tag_folders = std::fs::read_dir(sf.path())?;
+                for tag_folder in tag_folders {
+                    let tf = tag_folder?;
+                    let files = std::fs::read_dir(tf.path())?;
+                    for file in files {
+                        let ff = file?;
+                        let fname = ff.file_name();
+                        let file_name = fname.to_str().unwrap_or("");
+                        let file_path = ff.path().to_str().unwrap_or("").to_string();
+                        let manifest_item =
+                            KyaniteManifestItem::new(file_name.to_string(), file_path, vec![]);
+                        self.add(manifest_item);
+                    }
+                }
+            }
         }
-    }
-
-    fn _get_path(&self) -> Result<String, KyaniteError> {
-        let folder = format!("downloads/{}", &self.downloader);
-        if !std::path::Path::new(&folder).exists() {
-            debug!(
-                "Manifest folder for {} doesn't exist, creating it.",
-                &self.downloader
-            );
-            std::fs::create_dir_all(&folder)?;
-        }
-        Ok(format!("{}/manifest.json.gz", folder))
-    }
-
-    pub fn add(&mut self, _item: KyaniteManifestItem) -> Self {
-        self.clone()
-    }
-
-    pub fn load(&self) -> Result<Self, KyaniteError> {
-        Ok(self.to_owned())
-    }
-
-    pub fn save(&self) -> Result<(), KyaniteError> {
         Ok(())
     }
 }

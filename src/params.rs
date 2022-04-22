@@ -1,4 +1,3 @@
-use crate::error::KyaniteError;
 use clap::{crate_authors, crate_description, crate_name, crate_version, Arg};
 
 #[derive(Clone, Debug)]
@@ -11,7 +10,7 @@ pub struct KyaniteParams {
 }
 
 impl KyaniteParams {
-    pub fn new() -> Result<Self, KyaniteError> {
+    pub fn new() -> anyhow::Result<Self> {
         let matches =
             clap::app_from_crate!()
                 .arg(

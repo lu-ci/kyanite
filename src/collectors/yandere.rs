@@ -1,5 +1,4 @@
 use crate::collector::KyaniteCollector;
-use crate::error::KyaniteError;
 use crate::item::KyaniteItem;
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
@@ -41,7 +40,7 @@ impl KyaniteCollector for YandereCollector {
         "page"
     }
 
-    fn collect(&self, tags: Vec<String>) -> Result<Vec<KyaniteItem>, KyaniteError> {
+    fn collect(&self, tags: Vec<String>) -> anyhow::Result<Vec<KyaniteItem>> {
         info!("Starting {} collector...", &self.name());
         let mut items = Vec::new();
         let mut page = 0u64;

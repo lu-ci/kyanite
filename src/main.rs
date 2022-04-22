@@ -1,13 +1,11 @@
 use log::{error, info, warn};
 
 use crate::collector::CollectorCore;
-use crate::error::KyaniteError;
 use crate::logger::KyaniteLogger;
 use crate::params::KyaniteParams;
 
 mod collector;
 mod collectors;
-mod error;
 mod item;
 mod logger;
 mod manifest;
@@ -15,7 +13,7 @@ mod params;
 mod stats;
 mod utility;
 
-fn main() -> Result<(), KyaniteError> {
+fn main() -> anyhow::Result<()> {
     let params = KyaniteParams::new()?;
     KyaniteLogger::init(params.verbose)?;
     if params.insane {
@@ -28,8 +26,8 @@ fn main() -> Result<(), KyaniteError> {
             "If you are absolutely sure you want to do this, add the \"--insanity\" argument."
         );
     } else {
-        let mut collector = CollectorCore::new(params.clone());
-        let items = collector.collect();
+        let mut collector = CollectorCore::new(params.clone())?;
+        let items = collector.collect()?;
         if !params.debug {
             collector.download(Some(items))?;
         } else {

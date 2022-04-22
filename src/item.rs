@@ -1,9 +1,8 @@
 use std::io::prelude::*;
 
-use log::debug;
+use log::{debug, info};
 
-use crate::error::KyaniteError;
-use crate::manifest::KyaniteManifest;
+use crate::manifest::{KyaniteManifest, KyaniteManifestItem};
 use crate::stats::StatsContainer;
 use crate::utility::KyaniteUtility;
 
@@ -56,7 +55,7 @@ impl KyaniteItem {
         format!("{}.{}", &self.md5.clone().url, &self.ext)
     }
 
-    pub fn download(&mut self) -> Result<(), KyaniteError> {
+    pub fn download(&mut self) -> anyhow::Result<()> {
         let mut data: Vec<u8> = Vec::new();
         let mut resp = reqwest::get(&self.url)?;
         resp.copy_to(&mut data)?;
@@ -84,7 +83,7 @@ impl KyaniteItem {
         self.data = None;
     }
 
-    pub fn path(&self) -> Result<String, KyaniteError> {
+    pub fn path(&self) -> anyhow::Result<String> {
         let folder = format!(
             "downloads/{}/{}",
             &self.coll,
@@ -101,40 +100,17 @@ impl KyaniteItem {
         ))
     }
 
-    pub fn _indexed(&self, _manifest: &KyaniteManifest) -> Option<String> {
+    pub fn indexed(&self, manifest: &KyaniteManifest) -> Option<String> {
         let mut location = None;
-        let path = self.path().unwrap_or_else(|_| "".to_owned());
-        if !path.is_empty() && std::path::Path::new(&path).exists() {
-            location = Some(path);
+        for item in &manifest.files {
+            if item.name == self.name() {
+                location = Some(item.file.clone())
+            }
         }
         location
     }
 
-    pub fn exists(&self) -> anyhow::Result<Option<String>> {
-        let name = self.name();
-        let mut location = None;
-        let service_folders = std::fs::read_dir("downloads/")?;
-        'sfl: for service_folder in service_folders {
-            let sf = service_folder?;
-            let tag_folders = std::fs::read_dir(sf.path())?;
-            for tag_folder in tag_folders {
-                let tf = tag_folder?;
-                let files = std::fs::read_dir(tf.path())?;
-                for file in files {
-                    let ff = file?;
-                    let fname = ff.file_name();
-                    let file_name = fname.to_str().unwrap_or("");
-                    if file_name == name {
-                        location = Some(ff.path().to_str().unwrap_or("").to_string());
-                        break 'sfl;
-                    }
-                }
-            }
-        }
-        Ok(location)
-    }
-
-    pub fn store(&mut self, path: String) -> Result<(), KyaniteError> {
+    pub fn store(&mut self, path: String) -> anyhow::Result<()> {
         self.download()?;
         let mut file = std::fs::File::create(&path)?;
         file.write_all(&self.data.clone().unwrap())?;
@@ -145,11 +121,11 @@ impl KyaniteItem {
     pub fn save(
         &mut self,
         stats: &mut StatsContainer,
-        index: Option<String>,
-    ) -> Result<String, KyaniteError> {
+        manifest: &mut KyaniteManifest,
+    ) -> anyhow::Result<String> {
         let response: &'static str;
         let path = self.path()?;
-        match index {
+        match self.indexed(manifest) {
             Some(idx) => {
                 let source = std::path::Path::new(&idx);
                 let destination = std::path::Path::new(&path);
@@ -166,6 +142,12 @@ impl KyaniteItem {
                         Ok(_) => {
                             stats.add_size(self.size);
                             response = stats.add_ok();
+                            let item = KyaniteManifestItem::new(
+                                self.name(),
+                                self.path()?,
+                                self.tags.clone(),
+                            );
+                            manifest.add(item);
                         }
                         Err(_) => {
                             response = stats.add_failed();
@@ -197,5 +179,25 @@ impl KyaniteItem {
         }
         debug!("Item trimming complete, final count: {}", items.len());
         clean
+    }
+
+    pub fn skip(stats: &mut StatsContainer, items: Vec<Self>) -> anyhow::Result<Vec<Self>> {
+        let mut new = Vec::<Self>::new();
+        for item in &items {
+            if std::path::Path::new(&item.path()?).exists() {
+                let _ = stats.add_skipped();
+            } else {
+                new.push(item.clone());
+            }
+        }
+        if stats.skipped > 0 {
+            info!("Pre-Skipped: {} items.", stats.skipped);
+        }
+        Ok(new)
+    }
+
+    pub fn sort(mut items: Vec<Self>) -> Vec<Self> {
+        items.sort_by_key(|item| item.name());
+        items
     }
 }

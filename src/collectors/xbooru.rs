@@ -2,7 +2,6 @@ use crate::collector::KyaniteCollector;
 use crate::item::KyaniteItem;
 use serde::{Deserialize, Serialize};
 
-use crate::error::KyaniteError;
 use log::{debug, info};
 
 #[derive(Clone, Debug, Default)]
@@ -43,7 +42,7 @@ impl KyaniteCollector for XBooruCollector {
         "pid"
     }
 
-    fn collect(&self, tags: Vec<String>) -> Result<Vec<KyaniteItem>, KyaniteError> {
+    fn collect(&self, tags: Vec<String>) -> anyhow::Result<Vec<KyaniteItem>> {
         info!("Starting {} collector...", &self.name());
         let mut items = Vec::new();
         let mut page = 0u64;

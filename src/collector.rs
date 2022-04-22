@@ -6,9 +6,8 @@ use crate::collectors::konachan::KonachanCollector;
 use crate::collectors::rule34::Rule34Collector;
 use crate::collectors::xbooru::XBooruCollector;
 use crate::collectors::yandere::YandereCollector;
-use crate::error::KyaniteError;
 use crate::item::KyaniteItem;
-use crate::manifest::{KyaniteManifest, KyaniteManifestItem};
+use crate::manifest::KyaniteManifest;
 use crate::params::KyaniteParams;
 use crate::stats::StatsContainer;
 use crate::utility::KyaniteUtility;
@@ -16,19 +15,6 @@ use crate::utility::KyaniteUtility;
 pub trait KyaniteCollector {
     fn id(&self) -> &'static str;
     fn name(&self) -> &'static str;
-    fn manifest(&self) -> KyaniteManifest {
-        let manifest = KyaniteManifest::new(self.id().to_owned());
-        match manifest.load() {
-            Ok(man) => man,
-            Err(why) => {
-                debug!(
-                    "Failed loading {} manifest, creating a new one: {:#?}",
-                    manifest.downloader, why
-                );
-                manifest
-            }
-        }
-    }
     fn api_base(&self) -> &'static str;
     fn site_base(&self) -> &'static str;
     fn tags_argument(&self) -> &'static str;
@@ -53,17 +39,18 @@ pub trait KyaniteCollector {
         debug!("{} API: {}", &self.name(), &api);
         api
     }
-    fn collect(&self, tags: Vec<String>) -> Result<Vec<KyaniteItem>, KyaniteError>;
+    fn collect(&self, tags: Vec<String>) -> anyhow::Result<Vec<KyaniteItem>>;
 }
 
 pub struct CollectorCore {
     stats: StatsContainer,
     params: KyaniteParams,
+    manifest: KyaniteManifest,
     collectors: Vec<Box<dyn KyaniteCollector>>,
 }
 
 impl CollectorCore {
-    pub fn new(params: KyaniteParams) -> Self {
+    pub fn new(params: KyaniteParams) -> anyhow::Result<Self> {
         let stats = StatsContainer::new();
         let collectors = vec![
             E621Collector::boxed(),
@@ -73,14 +60,16 @@ impl CollectorCore {
             XBooruCollector::boxed(),
             YandereCollector::boxed(),
         ];
-        Self {
+        let manifest = KyaniteManifest::new()?;
+        Ok(Self {
             stats,
             params,
+            manifest,
             collectors,
-        }
+        })
     }
 
-    pub fn collect(&self) -> Vec<KyaniteItem> {
+    pub fn collect(&mut self) -> anyhow::Result<Vec<KyaniteItem>> {
         info!(
             "Searching for {} on {}.",
             &self.params.tags.join(", "),
@@ -101,81 +90,36 @@ impl CollectorCore {
                             Vec::new()
                         }
                     };
-                    let mut manifest = collector.manifest();
                     for item in collected {
-                        match item.path() {
-                            Ok(path) => {
-                                let manifest_item = KyaniteManifestItem::new(
-                                    item.url.clone(),
-                                    path,
-                                    item.tags.clone(),
-                                );
-                                manifest.add(manifest_item);
-                            }
-                            Err(why) => {
-                                error!(
-                                    "Failed getting item path for {} manifest: {:#?}",
-                                    collector.name(),
-                                    why
-                                );
-                            }
-                        }
                         items.push(item);
                     }
-                    match manifest.save() {
-                        Ok(_) => {}
-                        Err(why) => {
-                            error!("Failed saving the {} manifest: {:#?}", collector.id(), why);
-                        }
-                    }
                 }
             }
         }
-        KyaniteItem::trim(items)
+        Ok(KyaniteItem::sort(KyaniteItem::skip(
+            &mut self.stats,
+            KyaniteItem::trim(items),
+        )?))
     }
 
-    pub fn get_manifest(&self, name: String) -> Option<KyaniteManifest> {
-        let mut manifest = None;
-        for collector in &self.collectors {
-            if collector.id() == name {
-                manifest = Some(collector.manifest());
-                break;
-            }
-        }
-        manifest
-    }
-
-    pub fn download(&mut self, items: Option<Vec<KyaniteItem>>) -> Result<(), KyaniteError> {
+    pub fn download(&mut self, items: Option<Vec<KyaniteItem>>) -> anyhow::Result<()> {
         let items = match items {
             Some(items) => items,
-            None => self.collect(),
+            None => self.collect()?,
         };
         let total = items.len();
-        let mut result = Ok(());
         for mut item in items {
-            match self.get_manifest(item.coll.clone()) {
-                Some(_manifest) => {
-                    let index = item.exists().unwrap_or(None);
-                    let resp = item.save(&mut self.stats, index)?;
-                    info!(
-                        "{} [{}] [{}] [{}/{}]: {}",
-                        resp,
-                        self.stats.describe(),
-                        KyaniteUtility::human_size(self.stats.size, 3f64, "GiB"),
-                        self.stats.count(),
-                        &total,
-                        item.describe()
-                    );
-                }
-                None => {
-                    result = Err(KyaniteError::from(format!(
-                        "An item tried referencing and unknown manifest type: {}",
-                        &item.coll
-                    )));
-                    break;
-                }
-            }
+            let resp = item.save(&mut self.stats, &mut self.manifest)?;
+            info!(
+                "{} [{}] [{}] [{}/{}]: {}",
+                resp,
+                self.stats.describe(),
+                KyaniteUtility::human_size(self.stats.size, 3f64, "GiB"),
+                self.stats.count(),
+                &total,
+                item.describe()
+            );
         }
-        result
+        Ok(())
     }
 }
