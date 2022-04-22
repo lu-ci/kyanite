@@ -10,7 +10,7 @@ repository = "https://gitlab.com/lu-ci/kyanite"
 description = "A modular, expandable, gallery collector."
 
 [profile.release]
-opt-level = 3
+opt-level = "z"
 lto = true
 
 [dependencies]
