@@ -96,10 +96,9 @@ impl CollectorCore {
                 }
             }
         }
-        Ok(KyaniteItem::sort(KyaniteItem::skip(
-            &mut self.stats,
-            KyaniteItem::trim(items),
-        )?))
+        Ok(KyaniteItem::sort(KyaniteItem::skip(KyaniteItem::trim(
+            items,
+        ))?))
     }
 
     pub fn download(&mut self, items: Option<Vec<KyaniteItem>>) -> anyhow::Result<()> {

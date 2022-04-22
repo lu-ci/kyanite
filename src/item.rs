@@ -181,10 +181,11 @@ impl KyaniteItem {
         clean
     }
 
-    pub fn skip(stats: &mut StatsContainer, items: Vec<Self>) -> anyhow::Result<Vec<Self>> {
+    pub fn skip(items: Vec<Self>) -> anyhow::Result<Vec<Self>> {
         let mut new = Vec::<Self>::new();
+        let mut stats = StatsContainer::new();
         for item in &items {
-            if std::path::Path::new(&item.path()?).exists() {
+            if !std::path::Path::new(&item.path()?).exists() {
                 let _ = stats.add_skipped();
             } else {
                 new.push(item.clone());
