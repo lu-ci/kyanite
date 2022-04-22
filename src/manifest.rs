@@ -1,3 +1,4 @@
+use log::info;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -21,7 +22,9 @@ pub struct KyaniteManifest {
 impl KyaniteManifest {
     pub fn new() -> anyhow::Result<Self> {
         let mut man = Self { files: Vec::new() };
+        info!("Loading manifest...");
         man.load()?;
+        info!("Loaded {} manifest items.", man.files.len());
         Ok(man)
     }
 
