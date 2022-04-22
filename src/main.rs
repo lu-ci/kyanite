@@ -1,3 +1,5 @@
+extern crate core;
+
 use log::{error, info, warn};
 
 use crate::collector::CollectorCore;
@@ -13,7 +15,8 @@ mod params;
 mod stats;
 mod utility;
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     let params = KyaniteParams::new()?;
     KyaniteLogger::init(params.verbose)?;
     if params.insane {
@@ -27,9 +30,9 @@ fn main() -> anyhow::Result<()> {
         );
     } else {
         let mut collector = CollectorCore::new(params.clone())?;
-        let items = collector.collect()?;
+        let items = collector.collect().await?;
         if !params.debug {
-            collector.download(Some(items))?;
+            collector.download(Some(items)).await?;
         } else {
             info!("Skipped downloading phase, debugging mode is enabled.");
         }

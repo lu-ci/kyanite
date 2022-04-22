@@ -12,6 +12,7 @@ use crate::params::KyaniteParams;
 use crate::stats::StatsContainer;
 use crate::utility::KyaniteUtility;
 
+#[async_trait::async_trait]
 pub trait KyaniteCollector {
     fn id(&self) -> &'static str;
     fn name(&self) -> &'static str;
@@ -39,7 +40,7 @@ pub trait KyaniteCollector {
         debug!("{} API: {}", &self.name(), &api);
         api
     }
-    fn collect(&self, tags: Vec<String>) -> anyhow::Result<Vec<KyaniteItem>>;
+    async fn collect(&self, tags: Vec<String>) -> anyhow::Result<Vec<KyaniteItem>>;
 }
 
 pub struct CollectorCore {
@@ -69,7 +70,7 @@ impl CollectorCore {
         })
     }
 
-    pub fn collect(&mut self) -> anyhow::Result<Vec<KyaniteItem>> {
+    pub async fn collect(&mut self) -> anyhow::Result<Vec<KyaniteItem>> {
         info!(
             "Searching for {} on {}.",
             &self.params.tags.join(", "),
@@ -79,7 +80,7 @@ impl CollectorCore {
         for collector in &self.collectors {
             for source in &self.params.sources {
                 if source == collector.id() || source == collector.name() || source == "all" {
-                    let collected = match collector.collect((&self.params.tags).to_owned()) {
+                    let collected = match collector.collect((&self.params.tags).to_owned()).await {
                         Ok(clctd) => clctd,
                         Err(why) => {
                             error!(
@@ -102,14 +103,14 @@ impl CollectorCore {
         Ok(sorted)
     }
 
-    pub fn download(&mut self, items: Option<Vec<KyaniteItem>>) -> anyhow::Result<()> {
+    pub async fn download(&mut self, items: Option<Vec<KyaniteItem>>) -> anyhow::Result<()> {
         let items = match items {
             Some(items) => items,
-            None => self.collect()?,
+            None => self.collect().await?,
         };
         let total = items.len();
         for mut item in items {
-            let resp = item.save(&mut self.stats, &mut self.manifest)?;
+            let resp = item.save(&mut self.stats, &mut self.manifest).await?;
             info!(
                 "{} [{}] [{}] [{}/{}]: {}",
                 resp,

@@ -15,6 +15,7 @@ impl E621Collector {
     }
 }
 
+#[async_trait::async_trait]
 impl KyaniteCollector for E621Collector {
     fn id(&self) -> &'static str {
         "e621"
@@ -40,7 +41,7 @@ impl KyaniteCollector for E621Collector {
         "page"
     }
 
-    fn collect(&self, tags: Vec<String>) -> anyhow::Result<Vec<KyaniteItem>> {
+    async fn collect(&self, tags: Vec<String>) -> anyhow::Result<Vec<KyaniteItem>> {
         info!("Starting {} collector...", &self.name());
         let mut items = Vec::new();
         let mut page = 0u64;
@@ -48,9 +49,9 @@ impl KyaniteCollector for E621Collector {
         while !finished {
             debug!("Grabbing page with Reqwest GET...");
             let joined_tags = tags.clone().join("+");
-            let mut resp = reqwest::get(&self.api_by_page(joined_tags, page))?;
+            let resp = reqwest::get(&self.api_by_page(joined_tags, page)).await?;
             debug!("Reading the page body as text...");
-            let body = resp.text()?;
+            let body = resp.text().await?;
             debug!("Deserializing posts...");
             let posts: Vec<E621Post> = match serde_json::from_str::<E621Response>(&body) {
                 Ok(resp) => resp.posts,

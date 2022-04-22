@@ -1,4 +1,4 @@
-use clap::{crate_authors, crate_description, crate_name, crate_version, Arg};
+use clap::{command, Arg};
 
 #[derive(Clone, Debug)]
 pub struct KyaniteParams {
@@ -11,37 +11,36 @@ pub struct KyaniteParams {
 
 impl KyaniteParams {
     pub fn new() -> anyhow::Result<Self> {
-        let matches =
-            clap::app_from_crate!()
+        let matches = command!()
                 .arg(
-                    Arg::with_name("debug").long("debug").short("d").help(
+                    Arg::new("debug").long("debug").short('d').help(
                         "Goes through the collection processing without downloading anything",
                     ),
                 )
                 .arg(
-                    Arg::with_name("verbose")
+                    Arg::new("verbose")
                         .long("verbose")
-                        .short("v")
+                        .short('v')
                         .help("Display debug logs"),
                 )
                 .arg(
-                    Arg::with_name("sources")
+                    Arg::new("sources")
                         .long("sources")
-                        .short("s")
+                        .short('s')
                         .help("The website to scrap. Type \"all\" for all, separate multiple with a comma.").
                         value_name("sources")
                         .default_value("all"))
                 .arg(
-                    Arg::with_name("tags")
+                    Arg::new("tags")
                         .long("tags")
-                        .short("t")
+                        .short('t')
                         .help("Define the tags you wish to scrap, separate multiple with a comma")
                         .value_name("tags"),
                 )
                 .arg(
-                    Arg::with_name("insanity")
+                    Arg::new("insanity")
                         .long("insanity")
-                        .short("i")
+                        .short('i')
                         .help("Overrides the empty tag limitation, allowing you to scrap entire websites.")
                 )
                 .get_matches();

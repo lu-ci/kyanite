@@ -55,10 +55,10 @@ impl KyaniteItem {
         format!("{}.{}", &self.md5.clone().url, &self.ext)
     }
 
-    pub fn download(&mut self) -> anyhow::Result<()> {
-        let mut data: Vec<u8> = Vec::new();
-        let mut resp = reqwest::get(&self.url)?;
-        resp.copy_to(&mut data)?;
+    pub async fn download(&mut self) -> anyhow::Result<()> {
+        let resp = reqwest::get(&self.url).await?;
+        let bytes = resp.bytes().await?;
+        let data = bytes.to_vec();
         let item_url_md5 = format!("{:x}", md5::compute(&self.url));
         let item_data_md5 = format!("{:x}", md5::compute(&data));
         self.md5 = KyaniteItemMD5 {
@@ -110,15 +110,15 @@ impl KyaniteItem {
         location
     }
 
-    pub fn store(&mut self, path: String) -> anyhow::Result<()> {
-        self.download()?;
+    pub async fn store(&mut self, path: String) -> anyhow::Result<()> {
+        self.download().await?;
         let mut file = std::fs::File::create(&path)?;
         file.write_all(&self.data.clone().unwrap())?;
         file.sync_all()?;
         Ok(())
     }
 
-    pub fn save(
+    pub async fn save(
         &mut self,
         stats: &mut StatsContainer,
         manifest: &mut KyaniteManifest,
@@ -138,7 +138,7 @@ impl KyaniteItem {
             }
             None => {
                 if !std::path::Path::new(&path).exists() {
-                    match &self.store(path) {
+                    match &self.store(path).await {
                         Ok(_) => {
                             stats.add_size(self.size);
                             response = stats.add_ok();
