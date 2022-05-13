@@ -80,7 +80,7 @@ impl KyaniteCollector for DanbooruCollector {
                     for post in posts {
                         if post.valid() {
                             items.push(KyaniteItem::new(
-                                post.large_file_url,
+                                post.file_url,
                                 tags.clone(),
                                 self.id().to_owned(),
                             ));
@@ -99,7 +99,7 @@ impl KyaniteCollector for DanbooruCollector {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct DanbooruPost {
     #[serde(default = "String::default")]
-    pub large_file_url: String,
+    pub file_url: String,
     #[serde(default = "String::default")]
     pub tag_string_general: String,
     #[serde(default = "String::default")]
@@ -108,6 +108,6 @@ pub struct DanbooruPost {
 
 impl DanbooruPost {
     pub fn valid(&self) -> bool {
-        !(self.large_file_url.is_empty() || self.md5.is_empty())
+        !(self.file_url.is_empty() || self.md5.is_empty())
     }
 }
