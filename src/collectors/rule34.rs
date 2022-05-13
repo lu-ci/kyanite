@@ -46,7 +46,7 @@ impl KyaniteCollector for Rule34Collector {
     async fn collect(&self, tags: Vec<String>) -> anyhow::Result<Vec<KyaniteItem>> {
         info!("Starting {} collector...", &self.name());
         let mut items = Vec::new();
-        let mut page = 0u64;
+        let mut page = 0u64; // Starts at 0.
         let mut finished = false;
         while !finished {
             debug!("Grabbing page with Reqwest GET...");

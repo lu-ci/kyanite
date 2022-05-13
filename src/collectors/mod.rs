@@ -1,3 +1,4 @@
+pub mod danbooru;
 pub mod e621;
 pub mod gelbooru;
 pub mod konachan;

@@ -44,7 +44,7 @@ impl KyaniteCollector for YandereCollector {
     async fn collect(&self, tags: Vec<String>) -> anyhow::Result<Vec<KyaniteItem>> {
         info!("Starting {} collector...", &self.name());
         let mut items = Vec::new();
-        let mut page = 0u64;
+        let mut page = 1u64; // Starts at 1.
         let mut finished = false;
         while !finished {
             debug!("Grabbing page with Reqwest GET...");

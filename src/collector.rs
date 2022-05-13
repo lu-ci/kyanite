@@ -1,3 +1,4 @@
+use crate::collectors::danbooru::DanbooruCollector;
 use log::{debug, error, info};
 
 use crate::collectors::e621::E621Collector;
@@ -54,6 +55,7 @@ impl CollectorCore {
     pub fn new(params: KyaniteParams) -> anyhow::Result<Self> {
         let stats = StatsContainer::new();
         let collectors = vec![
+            DanbooruCollector::boxed(),
             E621Collector::boxed(),
             GelbooruCollector::boxed(),
             KonachanCollector::boxed(),

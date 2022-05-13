@@ -23,14 +23,15 @@ cargo install kyanite
 
 ## Supported Services
 
-| Service  | Collector | Location     | Type |
-|----------|-----------|--------------|------|
-| e621     | e621      | e621.net     | Tags |
-| Gelbooru | gelbooru  | gelbooru.com | Tags |
-| Konachan | konachan  | konachan.com | Tags |
-| Rule34   | rule34    | rule34.xxx   | Tags |
-| Yandere  | yandere   | yande.re     | Tags |
-| Xbooru   | xbooru    | xbooru.com   | Tags |
+| Service  | Collector | Location           | Type |
+|----------|-----------|--------------------|------|
+| Danbooru | danbooru  | danbooru.donmai.us | Tags |
+| e621     | e621      | e621.net           | Tags |
+| Gelbooru | gelbooru  | gelbooru.com       | Tags |
+| Konachan | konachan  | konachan.com       | Tags |
+| Rule34   | rule34    | rule34.xxx         | Tags |
+| Yandere  | yandere   | yande.re           | Tags |
+| Xbooru   | xbooru    | xbooru.com         | Tags |
 
 ## Planned Service Support
 
