@@ -8,6 +8,7 @@ use crate::params::KyaniteParams;
 
 mod collector;
 mod collectors;
+mod http;
 mod item;
 mod logger;
 mod manifest;

@@ -1,7 +1,7 @@
 [package]
 edition = "2018"
 name = "kyanite"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["AXAz0r <thealeksaradovic@gmail.com>"]
 keywords = ["image", "scrapper", "gallery"]
 license = "GPL-3.0"
@@ -18,7 +18,7 @@ async-trait = "0.1.53"
 anyhow = "1.0.57"
 chrono = "0.4.19"
 clap = { version = "3.1.18", features = ["cargo"] }
-fern = "0.6.1"
+fern = {version = "0.6.1", features = ["colored"] }
 flate2 = "1.0.23"
 md5 = "0.7.0"
 log = "0.4.17"

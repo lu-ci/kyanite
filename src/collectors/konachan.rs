@@ -1,4 +1,5 @@
 use crate::collector::KyaniteCollector;
+use crate::http::KyaniteClient;
 use crate::item::KyaniteItem;
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
@@ -49,7 +50,11 @@ impl KyaniteCollector for KonachanCollector {
         while !finished {
             debug!("Grabbing page with Reqwest GET...");
             let joined_tags = tags.clone().join("+");
-            let resp = reqwest::get(&self.api_by_page(joined_tags, page)).await?;
+            let resp = KyaniteClient::new()
+                .client
+                .get(&self.api_by_page(joined_tags, page))
+                .send()
+                .await?;
             debug!("Reading the page body as text...");
             let body = resp.text().await?;
             debug!("Deserializing posts...");

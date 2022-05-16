@@ -1,3 +1,5 @@
+use fern::colors::{Color, ColoredLevelConfig};
+use fern::Dispatch;
 use log::{debug, info};
 
 pub struct KyaniteLogger;
@@ -9,11 +11,17 @@ impl KyaniteLogger {
         } else {
             log::LevelFilter::Info
         };
-        fern::Dispatch::new()
-            .format(|out, message, record| {
+        let colors = ColoredLevelConfig::new()
+            .trace(Color::Magenta)
+            .debug(Color::Blue)
+            .info(Color::Green)
+            .warn(Color::Yellow)
+            .error(Color::Red);
+        Dispatch::new()
+            .format(move |out, message, record| {
                 out.finish(format_args!(
                     "[{} | {} | {}] {}",
-                    record.level(),
+                    colors.color(record.level()),
                     chrono::Local::now().format("%Y-%m-%d %H:%M:%S.%3f"),
                     record.target(),
                     message

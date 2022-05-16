@@ -1,5 +1,6 @@
 use std::io::prelude::*;
 
+use crate::http::KyaniteClient;
 use log::{debug, info};
 
 use crate::manifest::{KyaniteManifest, KyaniteManifestItem};
@@ -56,7 +57,7 @@ impl KyaniteItem {
     }
 
     pub async fn download(&mut self) -> anyhow::Result<()> {
-        let resp = reqwest::get(&self.url).await?;
+        let resp = KyaniteClient::new().client.get(&self.url).send().await?;
         let bytes = resp.bytes().await?;
         let data = bytes.to_vec();
         let item_url_md5 = format!("{:x}", md5::compute(&self.url));
